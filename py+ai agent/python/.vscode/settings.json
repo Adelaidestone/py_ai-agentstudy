@@ -1,0 +1,54 @@
+{
+  // 编辑器通用提示（关闭所有自动建议）
+  "editor.quickSuggestions": {
+    "other": false,
+    "comments": false,
+    "strings": false
+  },
+  "editor.suggestOnTriggerCharacters": false,
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.parameterHints.enabled": false,
+  "editor.hover.enabled": false,
+  "editor.suggestPreview": false,
+  "editor.inlineSuggest.enabled": false,
+  "editor.suggest.showWords": false,
+  "editor.suggest.showSnippets": false,
+  "editor.suggest.showMethods": false,
+  "editor.suggest.showFunctions": false,
+  "editor.suggest.showConstructors": false,
+  "editor.suggest.showFields": false,
+  "editor.suggest.showVariables": false,
+  "editor.suggest.showClasses": false,
+  "editor.suggest.showStructs": false,
+  "editor.suggest.showInterfaces": false,
+  "editor.suggest.showModules": false,
+  "editor.suggest.showProperties": false,
+  "editor.suggest.showEvents": false,
+  "editor.suggest.showOperators": false,
+  "editor.suggest.showUnits": false,
+  "editor.suggest.showValues": false,
+  "editor.suggest.showConstants": false,
+  "editor.suggest.showEnums": false,
+  "editor.suggest.showEnumMembers": false,
+  "editor.suggest.showKeywords": false,
+  "editor.suggest.showColors": false,
+  "editor.suggest.showFiles": false,
+  "editor.suggest.showReferences": false,
+  "editor.suggest.showFolders": false,
+  "editor.suggest.showTypeParameters": false,
+  "editor.suggest.showSnippetsPreventQuickSuggestions": false,
+
+  // 语言特定（以 Python 为例）
+  "[python]": {
+    "editor.quickSuggestions": {
+      "other": false,
+      "comments": false,
+      "strings": false
+    },
+    "editor.suggestOnTriggerCharacters": false,
+    "editor.parameterHints.enabled": false,
+    "editor.hover.enabled": false,
+    "editor.inlineSuggest.enabled": false
+  },
+  // 你可以在扩展视图中禁用 Copilot / Pylance 等扩展来彻底关闭它们的建议
+}

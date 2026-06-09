@@ -69,6 +69,8 @@ for i in nums:
     nums.append(5)
     print(i)
 """
+
+"""
 ##加密输入的文字
 text = input("请选择要加密的文字：")
 
@@ -78,3 +80,33 @@ for i in text:
     encrypted_code = char_code + 1
     encrypted_char += chr(encrypted_code)
 print("加密后的文字是：",encrypted_char)
+"""
+"""
+day = 1
+for day in range(1,31):
+    print(f"今天是第{day}天")
+    for n in range(1,4):
+        print(f"第{n}次锻炼")
+    print(f"第{day}天锻炼已完成！明天继续")    
+print(f"第{day}天锻炼计划完成了！我现在闪闪发光")   
+"""
+
+"""
+n=1
+while n<=30:
+    print(f"今天是第{n}天")
+    m=1
+    while m<=3:
+        print(f"第{m}次锻炼")
+        m+=1
+    print(f"第{n}天锻炼已完成！明天继续")
+    n +=1
+print(f"第{n-1}天锻炼计划完成了！我现在闪闪发光")
+"""
+
+for n in range(1,10):
+    m=1
+    while m<=n:
+        print(f"{m}*{n}={m*n}",end="\t")
+        m+=1
+    print()
