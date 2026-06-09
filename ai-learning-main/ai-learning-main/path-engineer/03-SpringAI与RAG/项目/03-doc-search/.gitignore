@@ -1,0 +1,10 @@
+target/
+.idea/
+*.iml
+.vscode/
+
+# 敏感凭据
+.env
+.env.*
+application-local.yml
+application-local.yaml

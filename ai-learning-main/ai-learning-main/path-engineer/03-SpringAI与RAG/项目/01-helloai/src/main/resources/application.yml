@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: helloai
+
+  ai:
+    openai:
+      # 通义千问兼容 OpenAI 协议的 Base URL
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      # 从环境变量读取，避免硬编码；缺失时给空串占位，由 StartupCredentialCheck 在启动期统一校验
+      api-key: ${DASHSCOPE_API_KEY:}
+
+      chat:
+        options:
+          model: qwen-turbo
+          temperature: 0.7
+      embedding:
+        options:
+          # 通义千问 text-embedding-v3 默认 1024 维，与 Milvus 配置一致
+          model: text-embedding-v3
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen2.5:3b
+          temperature: 0.7
+      # 关闭 Ollama 的 Embedding 自动装配，避免与 OpenAI(通义) 的 EmbeddingModel 冲突
+      embedding:
+        enabled: false
+    # 让 Milvus 等向量库走 OpenAI(通义千问 兼容协议) 的 Embedding
+    model:
+      embedding: openai
+    vectorstore:
+      milvus:
+        client:
+          # 注意：host 只写域名部分，不要带 https:// 和端口
+          host: ${ZILLIZ_HOST:in03-65ca0c32190e657.serverless.aws-eu-central-1.cloud.zilliz.com}
+          port: 443
+          secure: true
+          # 整串 Token，从控制台 Connect 按钮获取，强制走环境变量 ZILLIZ_TOKEN
+          # 控制台：https://cloud.zilliz.com → Cluster → Connect
+          token: ${ZILLIZ_TOKEN:}
+        databaseName: db_65ca0c32190e657
+        collectionName: helloai_docs
+        # ⚠️ 必须与 embedding 模型输出维度一致
+        embedding-dimension: 1024
+        index-type: AUTOINDEX
+        metric-type: COSINE
+        # 新 collection 不存在，让 Spring AI 自动按标准 schema 建表
+        initialize-schema: true
+
+logging:
+  level:
+    org.springframework.ai: DEBUG

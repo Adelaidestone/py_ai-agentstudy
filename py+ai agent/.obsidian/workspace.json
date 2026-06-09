@@ -1,0 +1,251 @@
+{
+  "main": {
+    "id": "e938cd41a55cf141",
+    "type": "split",
+    "children": [
+      {
+        "id": "6e6bf747467910c4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c4afa938903ac126",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "python_day1.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "python_day1"
+            }
+          },
+          {
+            "id": "528ad9ff669c9f7d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Python_数据类型.md",
+                "mode": "preview",
+                "source": true
+              },
+              "icon": "lucide-file",
+              "title": "Python_数据类型"
+            }
+          },
+          {
+            "id": "87a3cced856f8833",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Python_数据类型.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Python_数据类型"
+            }
+          },
+          {
+            "id": "ea77f92f92a42736",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "流程控制语句.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "流程控制语句"
+            }
+          }
+        ],
+        "currentTab": 3
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "d86e740da367bda8",
+    "type": "split",
+    "children": [
+      {
+        "id": "f885f246f9f172ab",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "dcd3f904c17511c7",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "55119f6c038758ad",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "9eee81491729c6aa",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "976aa9499150a794",
+    "type": "split",
+    "children": [
+      {
+        "id": "733667d78ee65893",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "34dd10a4a9fa8fc8",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "流程控制语句.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "流程控制语句 的反向链接列表"
+            }
+          },
+          {
+            "id": "c3aa3bf4bafca2d7",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "流程控制语句.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "流程控制语句 的出链列表"
+            }
+          },
+          {
+            "id": "146cab236169d332",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "896182396322c921",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "e02eb513f5cfb636",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "流程控制语句.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "流程控制语句 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false
+    }
+  },
+  "active": "ea77f92f92a42736",
+  "lastOpenFiles": [
+    "python/流程判断语句",
+    "Python_数据类型.md",
+    "流程控制语句.md",
+    "python/运算符.py",
+    "Python 算数运算符.md",
+    "python/unpacking.py",
+    "python/day2_unpacking.py",
+    "python/unpacking",
+    "python_day1.md",
+    "未命名",
+    "python/set.py",
+    "python/dict.py",
+    "python/tupletest.py",
+    "python/tuple test",
+    "python/Listtest.py",
+    "Pasted image 20260607094940.png",
+    "Pasted image 20260607094341.png",
+    "Pasted image 20260607082054.png",
+    "Pasted image 20260607082735.png"
+  ]
+}

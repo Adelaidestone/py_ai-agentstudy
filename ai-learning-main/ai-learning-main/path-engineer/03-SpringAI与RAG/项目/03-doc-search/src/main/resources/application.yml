@@ -1,0 +1,45 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: doc-search
+
+  ai:
+    # === Chat + Embedding 模型：通义千问（OpenAI 兼容协议）===
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen-turbo
+          temperature: 0.3
+      embedding:
+        options:
+          # 通义 v3 维度 1024；如用 v2 则改 1536
+          model: text-embedding-v3
+
+    # === 向量库：Zilliz Cloud（Milvus 兼容）===
+    vectorstore:
+      milvus:
+        client:
+          # 注意：host 只写域名部分，不要带 https:// 和端口
+          host: ${ZILLIZ_HOST:in03-65ca0c32190e657.serverless.aws-eu-central-1.cloud.zilliz.com}
+          port: 443
+          secure: true
+          # 整串 Token，从控制台 Connect 按钮获取
+          # 控制台：https://cloud.zilliz.com/orgs/org-mhlcrtnhfupmuhehzdxiex/projects/proj-51fe16d00bfa02ea9d8ce3/clusters/in03-65ca0c32190e657
+          token: ${ZILLIZ_TOKEN}
+        databaseName: default
+        collectionName: doc_search_demo
+        # ⚠️ 必须与 embedding 模型输出维度一致
+        embedding-dimension: 1024
+        index-type: AUTOINDEX
+        metric-type: COSINE
+        # 首次启动自动建集合，避免手动 DDL
+        initialize-schema: true
+
+logging:
+  level:
+    org.springframework.ai: INFO
+    com.fletcher: DEBUG
