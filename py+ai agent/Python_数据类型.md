@@ -37,7 +37,7 @@ s= "dasdsadsad"
 加号（+）是字符串连接运算符，星号（*）是重复操作
 
 ## boolean 布尔类型
-True False
+True
 
 
 #### List（列表）(ArrayList)

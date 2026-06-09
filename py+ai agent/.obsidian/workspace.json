@@ -4,53 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "6e6bf747467910c4",
+        "id": "d575fccb29c452e3",
         "type": "tabs",
         "children": [
           {
-            "id": "c4afa938903ac126",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "python_day1.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "python_day1"
-            }
-          },
-          {
-            "id": "528ad9ff669c9f7d",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Python_数据类型.md",
-                "mode": "preview",
-                "source": true
-              },
-              "icon": "lucide-file",
-              "title": "Python_数据类型"
-            }
-          },
-          {
-            "id": "87a3cced856f8833",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Python_数据类型.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Python_数据类型"
-            }
-          },
-          {
-            "id": "ea77f92f92a42736",
+            "id": "0677d560accb5278",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -63,8 +21,7 @@
               "title": "流程控制语句"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -226,23 +183,23 @@
       "bases:新建数据库": false
     }
   },
-  "active": "ea77f92f92a42736",
+  "active": "0677d560accb5278",
   "lastOpenFiles": [
-    "python/流程判断语句",
     "Python_数据类型.md",
     "流程控制语句.md",
-    "python/运算符.py",
+    "python_day1.md",
     "Python 算数运算符.md",
+    "Pasted image 20260609093150.png",
+    "python/流程判断语句",
+    "python/运算符.py",
     "python/unpacking.py",
     "python/day2_unpacking.py",
     "python/unpacking",
-    "python_day1.md",
     "未命名",
     "python/set.py",
     "python/dict.py",
     "python/tupletest.py",
     "python/tuple test",
-    "python/Listtest.py",
     "Pasted image 20260607094940.png",
     "Pasted image 20260607094341.png",
     "Pasted image 20260607082054.png",
