@@ -133,10 +133,10 @@ answers =[1,2,3]
 
 for i in range(3):
     wrong =0
-    while wrong<=3:
+    while wrong<=2:
         guess=input(questions[i])
         if int(guess) == int(answers[i]):
-            print("进入下一关" if i<=2 else "恭喜你通关了")
+            print("进入下一关" if i<2 else "恭喜你通关了")
             break
         if guess =="":
             continue
