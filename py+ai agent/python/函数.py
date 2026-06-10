@@ -22,16 +22,29 @@ def test1(*args):
     print(args)
 test1('张三','李四')   
 '''
+'''
+def greet(name,msg):
+    print(f'我是{name}，我要说：')
+    speak(msg)
+    print('牌没有问题')
+
+def speak(msg):
+    print(msg)
 
 
-a = 100
-b = 200
+greet('FA国赌神','给我擦皮鞋')
+'''
 
-def test():
-    global a
-    a=300
-    print(a)
-    print(b)
+'''
+def welcome(n):
+    print(f'你好啊{n}')
+    if n>1:
+        welcome(n-1)
+welcome(5)        
+'''
 
-print(a)
-print(b)
+def welcome(n):
+    if n > 1:
+        welcome(n - 1)
+        print(f'你好啊{n}')
+welcome(5)  
