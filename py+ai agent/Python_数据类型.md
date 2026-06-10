@@ -36,8 +36,7 @@ s= "dasdsadsad"
 ![[Pasted image 20260607094940.png]]
 加号（+）是字符串连接运算符，星号（*）是重复操作
 
-## boolean 布尔类型
-True
+
 
 
 #### List（列表）(ArrayList)
@@ -49,6 +48,16 @@ nums = [1, 2, 3, 4, 5]
 
 # 长度
 len(nums)              # 5
+
+max(nums)
+
+sorted(nums,reverse=布尔值)
+
+min(nums)
+
+sum(nums)
+
+
 
 # 访问（支持负索引！）
 nums[0]                # 1（第一个）
@@ -68,6 +77,7 @@ nums.remove(3)         # 删除值为 3 的第一个
 del nums[0]            # 按索引删除
 nums.pop()             # 弹出最后一个
 nums.pop(0)            # 弹出指定位置
+nums.clear()
 
 # 查找
 3 in nums              # True / False（包含检查）

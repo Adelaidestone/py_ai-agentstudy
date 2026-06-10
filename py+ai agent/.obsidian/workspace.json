@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "函数.md",
+                "file": "Python_数据类型.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "函数"
+              "title": "Python_数据类型"
             }
           }
         ],
@@ -200,13 +200,13 @@
   },
   "active": "b190c41dfd30b371",
   "lastOpenFiles": [
+    "函数.md",
     "Pasted image 20260610113021.png",
     "Pasted image 20260610112128.png",
     "Pasted image 20260610110455.png",
     "流程控制语句.md",
     "Python 算数运算符.md",
     "Python_数据类型.md",
-    "函数.md",
     "Pasted image 20260609122854.png",
     "Pasted image 20260609122232.png",
     "python/函数.py",

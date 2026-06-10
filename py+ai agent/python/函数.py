@@ -42,9 +42,13 @@ def welcome(n):
         welcome(n-1)
 welcome(5)        
 '''
-
+'''
 def welcome(n):
     if n >= 1:
         welcome(n - 1)
         print(f'你好啊{n}')
-welcome(5)  
+welcome(5)
+'''
+
+nums=[1,2,3,4]
+print(sum(nums))
