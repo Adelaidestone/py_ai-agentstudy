@@ -44,7 +44,7 @@ welcome(5)
 '''
 
 def welcome(n):
-    if n > 1:
+    if n >= 1:
         welcome(n - 1)
         print(f'你好啊{n}')
 welcome(5)  
