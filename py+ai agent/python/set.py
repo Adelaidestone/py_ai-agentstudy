@@ -24,3 +24,4 @@ print(a|b)
 print(a&b)
 print(a-b)
 print(a^b) ##对称差集
+

@@ -24,7 +24,7 @@ merged_dict={**d1,**d2}
 print(merged_dict)
 
 
-counts = {"a":0,"b":0,"c":0}
+counts = {"a":0,"b":0,"c":0,"d":0}
 for word in ["a","b","c","d","a"]:
     counts.setdefault(word,0)
     counts[word] +=1

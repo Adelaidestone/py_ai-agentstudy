@@ -36,11 +36,43 @@ s= "dasdsadsad"
 ![[Pasted image 20260607094940.png]]
 加号（+）是字符串连接运算符，星号（*）是重复操作
 
+常用方法
+```
+index:获取指定字符在字符串中第一次出现的下标
+
+split:将字符串按照指定字符进行分割，并返回一个列表
+
+replace:将字符串中的某个字符串片段，替换成目标字符串
+
+count:统计指定字符次数
+
+strip(死亡名单):从某个字符串删除指定字符串的任意字符
+规则：从字符串两端开始删除，直到遇到第一个不在指定字符串中的字符就停下
+
+
+msg ='welcome to shanghai'
+
+result = msg.index('h')
+
+result2 = msg.split('o')
+
+result4 = msg.split(' ')
+
+result3 = msg.replace('h','g')
+
+print(result)
+
+print(result2)
+
+print(result3)
+
+print(result4)
+```````
 
 
 
 #### List（列表）(ArrayList)
-可变，有序，允许重复
+可变，有序，允许重复,可以存放不同类型的元素
 字面量	[1,2,3]	
 +是列表连接运算符 *是重复操作
 ```
@@ -121,8 +153,12 @@ nums[2:5] = [20, 30, 40]   # 替换索引 2-4
 #### Tuple（元组）(record)
 不可变，有序，允许重复
 tuple=
-元组用()标识。内部元素用逗号隔开。但是元组不能二次赋值,只读列表
+	元组用()标识。内部元素用逗号隔开。但是元组不能二次赋值,==只读==列表
 字面量（1,2,3）
+index
+count
+max
+
 #### Dict(字典）(HashMap)
 字典和list区别：字典元素是通过键（key）存取，不是通过偏移存
 字典由索引（key）和对应值value组成
