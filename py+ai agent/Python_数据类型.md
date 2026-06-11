@@ -192,7 +192,14 @@ user.pop("age", None)      # 安全删除（不存在返回 None）
 
 # 长度
 len(user)
-```
+
+
+keys方法：用于获取字典中的键
+values方法：用于获取字典中的值
+返回值分别为dict_keys,dict_values 和列表类似，但是他不能通过下标访问元素
+
+
+```````
 
 #### Set(HashSet)
 可变，无序，不重复
