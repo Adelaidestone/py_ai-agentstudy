@@ -8,3 +8,7 @@ print(c)
 
 result=a.issubset(b)
 print(result)
+
+
+for item in a:
+    print(item)

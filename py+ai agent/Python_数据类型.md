@@ -161,6 +161,7 @@ max
 
 #### Dict(字典）(HashMap)
 字典和list区别：字典元素是通过键（key）存取，不是通过偏移存
+字典可以嵌套，可以无限嵌套 
 字典由索引（key）和对应值value组成
 可变，有序(保证插入顺序)，不允许重复
 字面量 {"a":1}
@@ -178,6 +179,9 @@ user.get("height", 1.7)   # 1.7（默认值）
 user["email"] = "a@b.com"  # 添加
 user["age"] = 31           # 修改
 
+#批量修改
+d1.update()
+
 # 删除
 del user["age"]
 user.pop("age", None)      # 安全删除（不存在返回 None）
@@ -192,6 +196,7 @@ len(user)
 
 #### Set(HashSet)
 可变，无序，不重复
+集合中的元素必须是不可变类型
 字面量{1,2,3}
 ```
 # 字面量
@@ -247,6 +252,7 @@ A.issuperset(B)
 A.isdisjoint(B)
 判断是否没有交集
 
+集合只能用for循环遍历 不能使用while遍历(无序，无下标)
 
 
 ```````
