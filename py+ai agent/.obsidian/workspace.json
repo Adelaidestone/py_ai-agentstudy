@@ -200,6 +200,9 @@
   },
   "active": "b190c41dfd30b371",
   "lastOpenFiles": [
+    "python/集合常用方法.py",
+    "python/序列的其他操作.py",
+    "python/序列相加.py",
     "python/String.py",
     "python/Stiring.py",
     "python/Stiring",
@@ -220,9 +223,6 @@
     "python/运算符.py",
     "python/unpacking.py",
     "python/day2_unpacking.py",
-    "python/unpacking",
-    "未命名",
-    "python/set.py",
     "Pasted image 20260607094940.png",
     "Pasted image 20260607094341.png",
     "Pasted image 20260607082054.png"

@@ -219,6 +219,8 @@ a - b        # 差集 {1, 2}
 a ^ b        # 对称差 {1, 2, 5, 6}
 
 
+frozenset(set)不可变集合
+
 
 实战：用户标签匹配
 
@@ -226,9 +228,28 @@ user_tags = {"python", "java", "ai", "backend"}
 job_tags = {"python", "ai", "ml"}
 
 common = user_tags & job_tags   # {'python', 'ai'} 匹配的标签
-match_rate = len(common) / len(job_tags)  # 0.67```
+match_rate = len(common) / len(job_tags)  # 0.67
 
-````
+常用方法
+A.difference_update(B)
+从集合A中删除集合B中的元素（A会被删除，B不会），无返回值
+
+A.union(B)
+合并两个新集合，AB不变，返回一个新集合
+
+A.issubset(B)
+判断A是否为B的子集
+如果A中所有元素，都在集合B中，就返回True，否则返回False
+
+A.issuperset(B)
+判断集合A是B的超集
+
+A.isdisjoint(B)
+判断是否没有交集
+
+
+
+```````
 ## 6. 综合：什么时候用什么？（5 分钟）
 
 | 场景            | 用什么                                | 为什么               |
