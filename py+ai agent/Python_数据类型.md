@@ -332,3 +332,70 @@ age -= 3
 
 age %= 3 取模
 ```
+
+
+
+![[Pasted image 20260611094026.png]]
+
+```
+  
+
+if scoreList:
+
+    #统计平均分
+
+    avg = sum(scoreList)/len(scoreList)
+
+    #合格人数
+
+    pass_num = 0
+
+  
+
+    #优秀人数
+
+    high_num=0
+
+    for item in scoreList:
+
+        if item>=60:
+
+            pass_num += 1
+
+        if item>=90:
+
+            high_num += 1
+
+    #合格率
+
+    pass_rate = pass_num/len(scoreList)*100
+
+    high_rate = high_num/len(scoreList)*100
+
+  
+
+    print('统计信息如下')
+
+    print(f'总人数为：{len(scoreList)}')
+
+    print(f'最高分为：{max(scoreList)}')
+
+    print(f'最低分为：{min(scoreList)}')
+
+    print(f'合格人数：{pass_num}')
+
+    print(f'优秀人数：{high_num}')
+
+    print(f'合格率：{pass_rate:1f}%')
+
+    print(f'优秀率：{high_rate:1f}%')    
+
+    print(f'平均分数：{sum(scoreList)/len(scoreList)}')        
+
+  
+  
+
+else:
+
+    print("你没有输入任何成绩")
+```
