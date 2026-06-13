@@ -41,12 +41,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "面向对象.md",
+                "file": "ai agent/NumPy基础.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "面向对象"
+              "title": "NumPy基础"
             }
           }
         ],
@@ -214,6 +214,10 @@
   },
   "active": "ec4227751701ea26",
   "lastOpenFiles": [
+    "面向对象.md",
+    "ai agent/NumPy基础.md",
+    "未命名",
+    "ai agent",
     "python/面向对象/类属性.py",
     "python/面向对象/类的定义.py",
     "python/类属性.py",
@@ -223,11 +227,7 @@
     "python/面向对象",
     "python/流程判断语句.py",
     "Python_数据类型.md",
-    "面向对象.md",
     "Pasted image 20260611114811.png",
-    "python/字典常用方法.py",
-    "python/集合常用方法.py",
-    "python/序列的其他操作.py",
     "Pasted image 20260611094026.png",
     "函数.md",
     "Pasted image 20260610113021.png",
