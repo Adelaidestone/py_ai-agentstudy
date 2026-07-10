@@ -327,5 +327,18 @@ rprint(response)
 用来存放模型厂商基于Open AI API协议拓展的字段
 比如 thinking是DeepSeek拓展的字段，用于控制是否启用思考模型
 ```
+model=init_chat_model(
 
+    model="deepseek:deepseek-v4-flash",  # 模型名称
+
+    extra_body={
+
+        "thinking": {"type": "enabled"}
+
+    }
+
+)
+rprint(model.invoke("如果我想要考公，我应该怎么做？"))
 ```
+
+# 3.LangSmith
