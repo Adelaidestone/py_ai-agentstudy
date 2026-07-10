@@ -192,7 +192,7 @@ LangChain在模型调用上提供了几个核心的调用方式：
    场景：文档摘要、批量问答、数据预处理、多样本分类等
 - `abatch`:非阻塞式，提高系统吞吐量高并发web应用、IO密集型任务
 
-### 5.1异步调用
+### 2.4 异步调用
 同步(sync)：
 - 概念：发起一个任务后，需要等待该任务完成，才能继续执行后续任务
 - 表现：当前执行流会被阻塞
@@ -203,4 +203,129 @@ LangChain在模型调用上提供了几个核心的调用方式：
 
 异步方法（ainvoke\astream\abatch）与他们的同步版本相比，具备以下特点：
 - `避免阻塞主线程`：同步调用会阻塞程序执行，异步方法让应用在等待api响应时保持响应性
-- `优化资源利用`：异步操作可以更高效地利用系统资源，减少空闲等待时间
+- `优化资源利用`：异步操作可以更高效地利用系统资源，减少空闲等待时间、
+
+
+## 2.5 拓展内容
+
+### 2.5.1 美化模型输出响应
+- 使用pretty_print()
+- 使用rich库
+### 2.5.2 模型配置信息profile
+LangChain1.1及更高版本可以通过profile属性查看模型的配置信息，不过也取决于是否声明了能力画像
+```
+{
+'name': 'DeepSeek V4 Flash', 
+'release_date': '2026-04-24', 
+'last_updated': '2026-04-24', 
+'open_weights': True,
+'max_input_tokens': 1000000, 
+'max_output_tokens': 384000, 
+'text_inputs': True, 
+'image_inputs': False, 
+'audio_inputs': False, 
+'video_inputs': False, 
+'text_outputs': True,
+'image_outputs': False, 
+'audio_outputs': False, 
+'video_outputs': False,
+'reasoning_output': True, 
+'tool_calling': True,
+'structured_output': True, 
+'attachment': False, 
+'temperature': True
+}
+```
+
+### 2.5.3 两个重要的参数
+**model_kwargs**
+用于存放那些OpenAI Compatible API支持但是Langchain没有直接列出的字段，如用于支持Function Call的tools字段
+![[openai的tools.png]]
+```
+from langchain.chat_models import init_chat_model
+
+from dotenv import load_dotenv
+
+import os
+
+from rich import print as rprint
+
+  
+  
+
+load_dotenv(override=True)
+
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL")
+
+  
+
+model=init_chat_model(
+
+    model="deepseek-v4-flash",  # 模型名称
+
+    api_key=DEEPSEEK_API_KEY,
+
+    base_url=DEEPSEEK_BASE_URL,  # DeepSeek API 的基础 URL
+
+    model_kwargs={
+
+        "tools": [
+
+    {
+
+        "type": "function",
+
+        "function": {
+
+            "name": "get_weather",
+
+            "description": "Get weather of a location, the user should supply a location first.",
+
+            "parameters": {
+
+                "type": "object",
+
+                "properties": {
+
+                    "location": {
+
+                        "type": "string",
+
+                        "description": "The city and state, e.g. San Francisco, CA",
+
+                    }
+
+                },
+
+                "required": ["location"]
+
+            },
+
+        }
+
+    },
+
+]
+
+    }  
+
+)
+
+  
+
+response = model.invoke("帮我获取海口的天气")
+
+rprint(response)
+```
+
+
+![[用参数调用tools.png]]
+
+**extra_body**
+用来存放模型厂商基于Open AI API协议拓展的字段
+比如 thinking是DeepSeek拓展的字段，用于控制是否启用思考模型
+```
+
+```

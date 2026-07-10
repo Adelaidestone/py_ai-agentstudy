@@ -8,49 +8,7 @@
         "type": "tabs",
         "children": [
           {
-            "id": "0677d560accb5278",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "流程控制语句.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "流程控制语句"
-            }
-          },
-          {
-            "id": "b190c41dfd30b371",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Python_数据类型.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Python_数据类型"
-            }
-          },
-          {
             "id": "62b3ecfc70ca865e",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "ai agent/大模型认知和工程概览.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "大模型认知和工程概览"
-            }
-          },
-          {
-            "id": "bb8ccd5244fcae65",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -63,8 +21,7 @@
               "title": "LangChain"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -227,29 +184,30 @@
       "markdown-importer:打开 Markdown 格式转换器": false
     }
   },
-  "active": "bb8ccd5244fcae65",
+  "active": "62b3ecfc70ca865e",
   "lastOpenFiles": [
+    "用参数调用tools.png",
+    "流程控制语句.md",
+    "LangChain.md",
+    "Python_数据类型.md",
+    "LangChain、LangGraph、DeepAgent关系.png",
+    "目录.base",
+    "openai的tools.png",
+    "LangChain智能体生命周期.png",
+    "ai agent/大模型认知和工程概览.md",
     "模型对提示开头结尾位置更敏感，中间信息更容易忽略图.png",
     "模型训练过程.png",
-    "LangChain.md",
-    "LangChain智能体生命周期.png",
-    "LangChain、LangGraph、DeepAgent关系.png",
     "RAG.md",
     "Pasted image 20260607082735.png",
-    "目录.base",
     "提示词工程.md",
     "Pasted image 20260607094341.png",
     "Pasted image 20260609122854.png",
     "photo",
     "1-3-5-1-1.jpg",
-    "流程控制语句.md",
     "ai agent/NumPy基础.md",
-    "ai agent/大模型认知和工程概览.md",
     "Pasted image 20260628144431.png",
-    "1-3-5-3-3.jpg",
     "面向对象.md",
     "Python 算数运算符.md",
-    "Python_数据类型.md",
     "python_day1.md",
     "函数.md",
     "preamble.sty.md",
