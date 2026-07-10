@@ -137,7 +137,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "函数.md",
+                "file": "LangChain.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -147,7 +147,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "函数 的反向链接列表"
+              "title": "LangChain 的反向链接列表"
             }
           },
           {
@@ -229,9 +229,11 @@
   },
   "active": "bb8ccd5244fcae65",
   "lastOpenFiles": [
+    "模型对提示开头结尾位置更敏感，中间信息更容易忽略图.png",
+    "模型训练过程.png",
+    "LangChain.md",
     "LangChain智能体生命周期.png",
     "LangChain、LangGraph、DeepAgent关系.png",
-    "LangChain.md",
     "RAG.md",
     "Pasted image 20260607082735.png",
     "目录.base",
@@ -240,8 +242,6 @@
     "Pasted image 20260609122854.png",
     "photo",
     "1-3-5-1-1.jpg",
-    "模型训练过程.png",
-    "模型对提示开头结尾位置更敏感，中间信息更容易忽略图.png",
     "流程控制语句.md",
     "ai agent/NumPy基础.md",
     "ai agent/大模型认知和工程概览.md",

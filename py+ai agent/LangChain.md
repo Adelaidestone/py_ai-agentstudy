@@ -35,6 +35,7 @@ LangChain是一个面向LLM应用开发的开源框架。他本身不是大模�
 
 所以，LangChain 不是“必须学”，但如果你的目标是做 **RAG、Agent、企业级 AI 应用、AI 服务接入现有业务系统**，它会显著降低你后续的组织成本。
 
+
 ## 1.2 Langchain和Coze/Dify区别
 很多人第一次接触 LangChain 时，都会问一句：**“我不是已经会用 Coze 或 Dify 了吗，为什么还要学这个？”**
 
@@ -97,3 +98,108 @@ langchain内部设置了统一接口，如ChatDeepSeek，ChatOpenAi等
 - 易于切换：简化了智能体系统中模型切换策略（只需修改模型字符串）
 - 简洁明了：更简洁的语法，减少样板代码
 - 自动适配：内部根据模型标识自动选择对应的驱动类（ChatOpenAI、ChatDeepSeek）
+
+## 2.2 参数
+| **参数**               | **类型** | **说明**                                                                                                                                                 | **默认值**           |
+| -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| ```model```          | str    | 模型名称（必需）                                                                                                                                               | 无                 |
+| ```model_provider``` | str    | 模型提供商名称                                                                                                                                                | 无                 |
+| ```api_key```        | str    | API密钥。如果不提供，会从环境变量中读取(如`DEEPSEEK_API_KEY`)                                                                                                             | None              |
+| ```base_url```       | str    | 大模型供应商API请求地址                                                                                                                                          | None              |
+| ```temperature```    | float  | 控制输出随机性，范围0.0-2.0，温度越高输出越随机          `0.0`：最确定性，输出几乎不变                                          `1.0`:平衡创造性和一致性                        `2.0`：最随机，最有创造性 | 0.7               |
+| ```max_tokens```     | int    | 限制模型输出的最大token数                                                                                                                                        | None              |
+| ```timeout```        | float  | 超时时间(秒)，超时未响应，请求会被取消                                                                                                                                   | None              |
+| `max_retries`        | int    | 请求失败(如网络问题、速率限制)时的最大重试次数                                                                                                                               | 6，claude code应该是7 |
+
+temperature参数根据使用场景选择：
+
+| **Temperature 取值** | **输出特点**                                 | **适用场景实例**                     |
+| ------------------ | ---------------------------------------- | ------------------------------ |
+| **0.0**            | **确定性最高。** 结果基本完全固定，每次输入得到的回答几乎都一样。      | 代码生成、数学计算、客观事实问答、数据提取。         |
+| **0.2 ~ 0.5**      | **专注且严谨。** 在保证事实准确性的前提下，语言流畅度较好，极少胡言乱语。  | 专业文档翻译、技术文档编写、学术总结。            |
+| **0.7 ~ 0.8**      | **均衡型（多数 AI 的默认值）。** 兼顾了语言的丰富度和基本逻辑的合理性。 | 日常对话、邮件撰写、通用的文章创作。             |
+| **1.0 ~ 1.2**      | **高创造性。** 词汇选择更多样，思维更发散，但偶尔会出现逻辑跳跃。      | 头脑风暴、故事创作、广告文案、角色扮演（Roleplay）。 |
+| **> 1.5**          | **极度混乱。** 词汇组合变得怪异，极易产生逻辑断层或乱码。          | 很少在实际业务中使用，仅用于极端压力测试或纯随机文本实验。  |
+
+Token:大模型通过分词器将文本拆分后的最小语义单位，大语言模型将此作为收费依据
+
+## 2.3 模型的调用
+LangChain在模型调用上提供了几个核心的调用方式：
+- `invoke`:阻塞式，一次性返回完整结果问答、批处理任务、无需实时反馈的场景
+ 基本语法：
+ ```
+ response = model.invoke(input,config=None)
+ ```
+ invoke的返回值:
+ ```
+ AIMessage(
+    content='2', ##模型生成的答案
+    additional_kwargs={'refusal': None, ' ##拒绝回答的情况 None表示安全
+	#--- 响应元数据(api返回的详细原始数据) ---
+	content': '我们要求1+1=?，只回复答案数字，所以答案是2。'},
+    response_metadata={
+        'token_usage': {
+            'completion_tokens': 18, 
+            'prompt_tokens': 18,
+            'total_tokens': 36,
+            'completion_tokens_details': {
+                'accepted_prediction_tokens': None, #预测生成的token数
+                'audio_tokens': None,
+                'reasoning_tokens': 16,#推理模型消耗的token
+                'rejected_prediction_tokens': None #被拒绝的预测Token
+            },
+            'prompt_tokens_details': {'audio_tokens': None,  #输入的音频Token数
+            'cached_tokens': 0},
+            'prompt_cache_hit_tokens': 0, #命中的缓存token数
+            'prompt_cache_miss_tokens': 18
+        },
+        'model_provider': 'deepseek',
+        'model_name': 'deepseek-v4-flash',
+        'system_fingerprint':  'fp_8b330d02d0_prod0820_fp8_kvcache_20260402', #系统指纹，用来追踪模型后端的配置变更
+        'id': '36156ac5-dd6c-4862-8e15-ede90afbbfbb',
+        'finish_reason': 'stop',
+        'logprobs': None
+    },
+    
+    # LangChain内部唯一标识
+    id='lc_run--019f4a76-ff41-7db2-a062-628fb62ab27d-0',
+    
+    #工具调用信息
+    tool_calls=[], #正常触发的外部工具调用列表
+    invalid_tool_calls=[], #触发失败或格式错误的工具调用
+    
+    #统一消耗元数据（LangChain标准化后的消耗格式）
+    usage_metadata={
+        'input_tokens': 18,
+        'output_tokens': 18,
+        'total_tokens': 36,
+        'input_token_details': {'cache_read': 0}, #从缓存中读取的输入数量
+        'output_token_details': {'reasoning': 16}
+    }
+)
+ ```
+ 
+- `ainvoke`:非阻塞式，提高系统吞吐量高并发web应用、IO密集型任务
+- `stream`:流式输出，实时返回每个每个Token聊天机器人、长文本生成，需要提升用户体验的交互应用。调用后，返回一个迭代器（iterator），可以通过循环实时处理每一个新的chunk内容块
+  stream的优点：
+   - `响应速度更快` -用户不必等待完整输出
+   - `交互体验更流程` -尤其是在长文本或复杂推理场景下
+   - `可实时展示模型思考过程` 
+- `astream`:非阻塞式，提高系统吞吐量高并发web应用、IO密集型任务
+- `batch`：批量处理多个输入高并发场景，需要同时处理大量请求
+   运行你一次性发送一组请求（含多条独立请求），模型会在后台并行处理，然后返回所有结果的列表
+   与`invoke`相比，可以`大幅减少网络往返开销 和等待时间` ,显著提升性能，降低成本
+   场景：文档摘要、批量问答、数据预处理、多样本分类等
+- `abatch`:非阻塞式，提高系统吞吐量高并发web应用、IO密集型任务
+
+### 5.1异步调用
+同步(sync)：
+- 概念：发起一个任务后，需要等待该任务完成，才能继续执行后续任务
+- 表现：当前执行流会被阻塞
+
+异步(async)：
+- 概念 ：发起一个任务后，不必等该任务结束，就可以继续执行其他任务
+- 表现：当前执行流不会被阻塞
+
+异步方法（ainvokr\astream\abatch）与他们的同步版本相比，具备以下特点：
+- `避免阻塞主线程`：同步调用会阻塞程序执行，异步方法让应用在等待api响应时保持响应性
