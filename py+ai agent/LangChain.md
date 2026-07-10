@@ -86,4 +86,14 @@ DeepAgent是新推出的全新组件，被定位为Agent Harness（智能体执�
 ### 1.4.4 LangSmith(可视化监控和测试平台)
 当智能体系统逐渐复杂时，单靠日志和打印输出调试无法满足调试和质量管理的需求
 
-LangSmith是LangChain推出的可视化监控和测试平台，用于跟踪、记录、分析智能体在运行过程中的完整调用链路，让智能体内部运行过程变得透明和可评估4
+LangSmith是LangChain推出的可视化监控和测试平台，用于跟踪、记录、分析智能体在运行过程中的完整调用链路，让智能体内部运行过程变得透明和可评估
+
+
+# 2.LangChain模型调用
+langchain内部设置了统一接口，如ChatDeepSeek，ChatOpenAi等
+此处我们要介绍的是init_chat_model
+问题：init_chat_model和直接使用ChatTongyi、ChatOpenAI有什么区别？
+- 统一接口：无需记住每个提供商的不同初始化方式
+- 易于切换：简化了智能体系统中模型切换策略（只需修改模型字符串）
+- 简洁明了：更简洁的语法，减少样板代码
+- 自动适配：内部根据模型标识自动选择对应的驱动类（ChatOpenAI、ChatDeepSeek）

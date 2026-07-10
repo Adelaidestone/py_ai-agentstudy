@@ -1,0 +1,7 @@
+{
+    // Python 解释器：使用 langchain1.2 conda 环境
+    "python.defaultInterpreterPath": "E:\\MiniConda3\\envs\\langchain1.2\\python.exe",
+    "python.interpreterPath": "E:\\MiniConda3\\envs\\langchain1.2\\python.exe",
+    // conda 可执行文件路径
+    "python.condaPath": "E:\\MiniConda3\\Scripts\\conda.exe"
+}
