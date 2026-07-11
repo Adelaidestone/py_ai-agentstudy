@@ -525,3 +525,111 @@ print(f"AI 回复：{response.content}...\n"
 难以支持复杂场景（多轮对话 / RAG / Few-shot）
 
 2. **提示词模板**
+在LangChain 1.0中，**ChatPromptTemplate** 是用于生成消息列表的核心组件。
+ChatPromptTemplate是创建聊天消息列表的提示模板。它比普通 PromptTemplate 更适合处理多角色、多轮次的对话场景。支持 System / Human /AI 等不同角色的消息模板
+
+#### 4.6.1 实例化
+**调用from_messages()（推荐）**
+该方法允许传入一个由元组（Tuple）构成的列表，列表中的每一个元组都代表一条具有特定角色的消息。
+```
+# 导入相关依赖 from langchain_core.prompts import ChatPromptTemplate 
+# 定义聊天提示词模版 
+chat_template = ChatPromptTemplate.from_messages( 
+	[("system", "你是一个有帮助的AI机器人，你的名字是{name}。"), 
+	("human", "你好，最近怎么样？"), 
+	("ai", "我很好，谢谢！"), 
+	("human", "{user_input}"), ] ) 
+# 打印格式化后的聊天提示词模版内容 
+print(prompt)
+```
+
+**直接init**
+```
+from langchain_core.prompts import ChatPromptTemplate 
+#参数类型这里使用的是tuple构成的
+list prompt_template = ChatPromptTemplate([ 
+# 字符串 role + 字符串 
+	("system", "你是一个AI开发工程师. 你的名字是 {name}."), 
+	("human", "你能开发哪些AI应用?"), 
+	("ai", "我能开发很多AI应用, 比如聊天机器人, 图像识别, 自然语言处理等."), ("human", "{user_input}") ]) 
+	#调用invoke()方法，返回
+	ChatPromptValue prompt = prompt_template.invoke({"name":"小谷AI", "user_input":"你能帮我做什么?"}) 
+	print(prompt)
+```
+
+#### 4.6.2模板如何调用
+方式1：使用 invoke()
+输出：ChatPromptValue的list对象
+![[invoke()的输出是ChatPromptValue.png]]
+方式2：使用format()
+输出：字符串（str）
+![[format()的输出是str.png]]
+方式3：使用format_messages()
+输出：消息列表
+![[format_message的输出.png]]
+
+**丰富的输入参数类型**
+
+参数是列表类型，列表的元素可以是字符串、字典、字符串构成的元组、消息类型、提示词模板 类型、消息提示词模板类型等
+源码
+```
+def __init__(self,            
+ messages: Sequence[BaseMessagePromptTemplate | BaseMessage | BaseChatPromptTemplate | tuple[str | type, str | list[dict] | list[object]] | str | dict[str, Any]],             
+ *,             
+ template_format: Literal["f-string", "mustache", "jinja2"] = "f string",             **kwargs: Any) -> None
+```
+举例：Message列表类型
+```
+from langchain_core.messages import SystemMessage,HumanMessage 
+
+chat_prompt_template = ChatPromptTemplate.from_messages([ 
+SystemMessage(content="我是一个贴心的智能助手"), 
+HumanMessage(content="我的问题是:人工智能英文怎么说？") ]) 
+messages = chat_prompt_template.invoke({}) 
+print(messages) print(type(messages))
+```
+MessagePromptTemplate列表类型
+LangChain提供不同类型的MessagePromptTemplate。最常用的是`SystemMessagePromptTemplate` 、 `HumanMessagePromptTemplate` 和 `AIMessagePromptTemplate `，分别创建系统消息、人工消息和AI消息。
+
+
+
+#### 4.6.3 高级特性
+==**部分变量预填充：partial**==
+预填充某些固定不变的变量，创建模板的变体。
+##### 1. 存在「全局固定常量」，每次调用不变
+
+场景：角色、模型人设、行业限定、输出格式要求，全流程统一。 
+不用 partial：每一次 format 都重复粘贴同一堆参数，代码冗余、改一处要全量改。
+用 partial：一次性绑定常量，下游只传动态变量，统一维护。
+##### 2. 参数分两段获取，不能一次性凑齐（最核心刚需）
+
+这是 partial 不可替代的场景：
+
+- 第一段：初始化时拿到固定参数（用户身份、系统配置、数据库配置）
+- 第二段：运行时才拿到动态参数（用户实时提问、工具返回结果）
+
+示例：
+
+1. 启动服务，读取配置 `product="电商客服"`，先 partial 固化；
+2. 用户发消息时才拿到 `user_msg`，此时只需要传这一个变量。 如果不用 partial，你必须把全局配置全局存起来，每次拼接传入，代码耦合严重。
+
+ 3. 嵌套模板、多模板复用
+
+一套基础模板，衍生多套细分场景： 基础模板：`{scene}场景下，根据{content}输出答案`
+
+- 客服模板 = 基础模板.partial (scene="电商售后")
+- 教育模板 = 基础模板.partial (scene="中小学答疑") 不用 partial 就要复制粘贴模板字符串，维护灾难。
+##### 3.搭配链（Chain）、Agent、工具时自动传参
+
+LangChain 的 Chain 只会自动传入**运行时上下文变量**，全局固定参数无法自动注入。
+- 不用 partial：自定义 Chain 重写输入逻辑，手动拼接参数；
+- 用 partial：提前把固定参数绑定到 prompt，Chain 无需额外改造。
+==**消息占位符：MessagesPlaceholder**==
+当你不确定消息提示模板使用什么角色，或者希望在格式化过程中插入消息列表时，该怎么办？ 这就 需要使用消息占位符，负责在特定位置添加消息列表
+
+`MessagesPlaceholder` 是 LangChain 内置的**特殊 Prompt 模板组件**，专门用来**批量插入一组完整消息列表**
+使用场景：多轮对话系统存储历史消息以及Agent的中间步骤处理此功能非常有用
+作用：
+- 承载对话历史：对话机器人需要把历史聊天记录传给大模型，历史是多条消息数组，不能用普通 `{history}` 字符串占位。 用`MessagesPlaceholder(variable_name="history")` 可以直接注入一整段对话上下文，实现多轮记忆。
+- 2. 支持动态可变长度消息列表:历史对话条数不固定（1 轮、10 轮、100 轮都可以），占位符会自动把列表里每一条消息平铺到提示词中，无需手动拼接。
+- 类型安全：普通 `PromptTemplate` 变量只能是字符串； `ChatPromptTemplate` 搭配 `MessagesPlaceholder` 支持结构化消息，兼容 OpenAI / 通义千问 / Claude 等所有支持消息格式的模型，不会出现格式错乱。
