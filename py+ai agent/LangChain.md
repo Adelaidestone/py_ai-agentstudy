@@ -62,7 +62,7 @@ LangChain是一个面向LLM应用开发的开源框架。他本身不是大模�
 ## 1.3 LangChain的主要模块
 
 - langchain-core：官方推荐的核心API,比如Runnable,BaseMessage等
-- langchain-classic：冗余代码移或不推荐使用的经典API移到此
+- langchain-classic：冗余代码或不推荐使用的经典API移到此
 - langchain-community：第三方集成，比如：langchain-openai、langchain-anthropic，按需安装，避免臃肿
 - langgraph:深度整合LangGraph 1.0，协调多个Chain，Agent、Tools完成更复杂的任务，而且支持循环调用
 
@@ -180,10 +180,10 @@ LangChain在模型调用上提供了几个核心的调用方式：
  ```
  
 - `ainvoke`:非阻塞式，提高系统吞吐量高并发web应用、IO密集型任务
-- `stream`:流式输出，实时返回每个每个Token聊天机器人、长文本生成，需要提升用户体验的交互应用。调用后，返回一个迭代器（iterator），可以通过循环实时处理每一个新的chunk内容块
+- `stream`:流式输出，实时返回每个Token。聊天机器人、长文本生成，需要提升用户体验的交互应用。调用后，返回一个迭代器（iterator），可以通过循环实时处理每一个新的chunk内容块
   stream的优点：
    - `响应速度更快` -用户不必等待完整输出
-   - `交互体验更流程` -尤其是在长文本或复杂推理场景下
+   - `交互体验更流畅` -尤其是在长文本或复杂推理场景下
    - `可实时展示模型思考过程` 
 - `astream`:非阻塞式，提高系统吞吐量高并发web应用、IO密集型任务
 - `batch`：批量处理多个输入高并发场景，需要同时处理大量请求
@@ -212,7 +212,7 @@ LangChain在模型调用上提供了几个核心的调用方式：
 - 使用pretty_print()
 - 使用rich库
 ### 2.5.2 模型配置信息profile
-LangChain1.1及更高版本可以通过profile属性查看模型的配置信息，不过也取决于是否声明了能力画像
+LangChain1.1及更高版本可以通过profile属性查看模型的配置信息，不过是否能看到也取决于是否声明了能力画像
 ```
 {
 'name': 'DeepSeek V4 Flash', 
@@ -239,7 +239,7 @@ LangChain1.1及更高版本可以通过profile属性查看模型的配置信息�
 
 ### 2.5.3 两个重要的参数
 **model_kwargs**
-用于存放那些OpenAI Compatible API支持但是Langchain没有直接列出的字段，如用于支持Function Call的tools字段
+用于存放那些传递 **OpenAI 官方 API 支持但 LangChain 尚未单独封装** 的标准参数，这些参数会直接合并到请求顶层，如用于支持Function Call的tools字段
 ![[openai的tools.png]]
 ```
 from langchain.chat_models import init_chat_model
@@ -324,7 +324,7 @@ rprint(response)
 ![[用参数调用tools.png]]
 
 **extra_body**
-用来存放模型厂商基于Open AI API协议拓展的字段
+用来存放模型厂商（vLLM、LM Studio、OpenRouter等） OpenAI 兼容服务的私有扩展参数，这些会放到 `extra_body` 中，而不是请求顶层。
 比如 thinking是DeepSeek拓展的字段，用于控制是否启用思考模型
 ```
 model=init_chat_model(
@@ -341,6 +341,9 @@ model=init_chat_model(
 rprint(model.invoke("如果我想要考公，我应该怎么做？"))
 ```
 
+
+ ==对于 OpenAI 兼容服务的**非官方扩展参数**，应优先使用 `extra_body`，而不是 `model_kwargs`==
+ 
 # 3.LangSmith
 LangSmith 是 LangChain 生态系统中专门用于 LLM（大语言模型）应用调试、监控、评估和管理 的平 台。
 - 追踪(tracing)：记录每次 LLM 调用的详细信息 
@@ -403,3 +406,30 @@ Message包含三个字段
 - 控制行为：通过 SystemMessage 精确控制 AI 的行为 
 - 对话历史：构建完整的多轮对话上下文 
 - 调试友好：更容易追踪和调试对话流程
+
+### 4.2 对话历史管理
+关键规则：每次调用必须传递完整的对话历史
+```
+第 1 轮： [system, user] → AI回复 → 保存回复 
+第 2 轮： [system, user, assistant, user] → AI回复 → 保存回复 
+第 3 轮： [system, user, assistant, user, assistant, user] → AI回复 注意：每次对话都要在原有的消息列表中 错误举例1❌： 1 2 3 4 5 添加新消息，不可重新创建新的列表
+```
+	注意：每次对话都要在原有的消息列表中 错误举例1❌： 1 2 3 4 5 添加新消息，不可重新创建新的列表。
+
+```
+conversation = [] 
+# 第一次 
+conversation.append({"role": "user", "content": "我叫张三"}) 
+response1 = model.invoke(conversation) 
+# 关键：保存 AI 回复 
+conversation.append({"role": "assistant", "content": response1.content}) 
+# 第二次（传递完整历史） 
+conversation.append({"role": "user", "content": "我叫什么？"}) 
+response2 = model.invoke(conversation)  # AI 记得
+```
+
+### 4.3 对话历史优化 
+**问题**：对话历史会越来越长，消耗大量 tokens 和成本。
+**解决方案**：只保留最近 N 轮对话。具体的：
+- 总是保留 system 消息（定义角色） 
+- 只保留最近 N 轮对话，丢弃更早的历史
