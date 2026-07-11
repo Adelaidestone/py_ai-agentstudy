@@ -491,5 +491,37 @@ print(msg2)
 过去，处理图片、音频、甚至是模型生成的“思维链（Reasoning）”内容时，不同供应商（OpenAI, Anthropic, Google 等）的 API 格式各异，导致开发者需要写大量的适配代码。` content_blocks `的出现终结了这种混乱,他可以把content解析成标准、类型安全的表示。
 - **数据结构**：他是一个`list`
 - **统一格式**：每个`block`都有一个`type`字段，用于区分内容类型
-- **支持类型：包括text、image、audio、video、tool_call（工具调用）以及reasonling(推理/思维链)
+- **支持类型**：包括text、image、audio、video、tool_call（工具调用）以及reasonling(推理/思维链)
 
+==① 输入格式化==
+对于复杂的对话（带图片或工具结果），建议使用建议使用content_blocks 列表形式构建HumanMessage或 AIMessage。 
+借助 content_blocks 我们可以用一套标准代码，无缝地在不同厂商的模型之间切换。
+② 输出格式化 
+content_blocks还可用于输出格式化，以deepseek官网的deepseek-v4-flash为例，其输出包含思考 内容，后者位于additional_kwargs的reasoning_content字段下。
+![[content_blocks输出格式化.png]]
+不同的模型其输出格式可能不同，仅为提取思考内容，切换模型都可能需要更改代码，非常不方便。 content_blocks提供了统一的输出格式，可以将不同格式的响应统一为标准格式。 注意：content_blocks是懒加载的，即调用时才会解析。
+	说明：优先检查 response.content_blocks 而不是 response.content，特别是当你需要获取“思维 链”或者“引用（Citations）”信息时。
+
+### 4.6 提示词模板（Prompt Templates）
+在 LangChain 开发中，构造提示词既可以直接使用 Python 字符串拼接（如 f-string、format() 或 +），也可以使用 LangChain 提供的 `PromptTemplate`或 `ChatPromptTemplate` 
+1. **字符串拼接**
+```
+# 字符串拼接 
+topic = "Python" 
+difficulty = "初学者" 
+# 难以维护，容易出错 
+prompt_str = f"你是一个{difficulty}级别的编程导师。请用简单易懂的语言解释{topic}。" 
+response = model.invoke(prompt_str) 
+print(f"AI 回复：{response.content}...\n"
+
+```
+优点 ✅ ： 
+简单直接，上手快 
+适合临时 demo 无额外学习成本 
+缺点 ❌ ： 
+可读性差（变量多时混乱） 
+不易维护（修改容易出错） 
+无变量校验（容易漏/拼错） 
+难以支持复杂场景（多轮对话 / RAG / Few-shot）
+
+2. **提示词模板**
