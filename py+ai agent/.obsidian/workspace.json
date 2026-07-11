@@ -15,8 +15,7 @@
               "state": {
                 "file": "LangChain.md",
                 "mode": "source",
-                "source": false,
-                "backlinks": false
+                "source": false
               },
               "icon": "lucide-file",
               "title": "LangChain"
@@ -79,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "976aa9499150a794",
@@ -187,9 +187,11 @@
   },
   "active": "62b3ecfc70ca865e",
   "lastOpenFiles": [
+    "2026-07-11.md",
+    "未命名.base",
+    "LangChain.md",
     "用参数调用tools.png",
     "流程控制语句.md",
-    "LangChain.md",
     "Python_数据类型.md",
     "LangChain、LangGraph、DeepAgent关系.png",
     "目录.base",
@@ -206,7 +208,6 @@
     "photo",
     "1-3-5-1-1.jpg",
     "ai agent/NumPy基础.md",
-    "Pasted image 20260628144431.png",
     "面向对象.md",
     "Python 算数运算符.md",
     "python_day1.md",
@@ -218,7 +219,6 @@
     "python/面向对象/类属性.py",
     "python/面向对象/类的定义.py",
     "python/类属性.py",
-    "python/面向对象/自定义方法.py",
-    "python/面向对象/创建实例.PY"
+    "python/面向对象/自定义方法.py"
   ]
 }

@@ -479,4 +479,17 @@ print(msg2)
 ```
 **存储字典类型**
 如果需要发送的不只是文本，如多模态内容，则需要content的 字典内容遵循模型供应商的API规范，以 字典列表形式。
-参考官方文档：
+参考官方文档：[Create chat completion | OpenAI API Reference](https://developers.openai.com/api/reference/python/resources/chat/subresources/completions/methods/create)
+```content=[ 
+	{'type': 'text', 'text': '这张图里有什么？'},
+	{ 'type': 'image_url', 
+	"image_url": base64_image,
+	}
+```
+### 4.5 content_blocks
+在 LangChain 1.x 中， `content_blocks` 是消息对象（BaseMessage）的一项重大升级。它的核心目标 是提供一种跨模型供应商、标准化的多模态数据结构。
+过去，处理图片、音频、甚至是模型生成的“思维链（Reasoning）”内容时，不同供应商（OpenAI, Anthropic, Google 等）的 API 格式各异，导致开发者需要写大量的适配代码。` content_blocks `的出现终结了这种混乱,他可以把content解析成标准、类型安全的表示。
+- **数据结构**：他是一个`list`
+- **统一格式**：每个`block`都有一个`type`字段，用于区分内容类型
+- **支持类型：包括text、image、audio、video、tool_call（工具调用）以及reasonling(推理/思维链)
+
