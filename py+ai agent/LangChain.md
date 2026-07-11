@@ -662,5 +662,158 @@ flowchart LR
 步骤4：将工具执行结果ToolMessage传递给模型生成回复
 
 ## 1.2 从Message流转看工具的调用
+```
+from langchain.messages import HumanMessage, ToolMessage
 
+from rich import print as rprint
 
+from langchain_core.tools import tool
+
+  
+
+@tool
+
+def get_weather(city: str):
+
+    """获取天气的工具"""
+
+    return f"{city}天气晴朗~"
+
+  
+  
+
+# 将模型和工具绑定
+
+model_with_tools = model.bind_tools([get_weather])
+
+  
+
+# 声明一个消息列表
+
+messages = [
+
+    HumanMessage("今天北京天气如何")
+
+]
+
+  
+
+# 模型生成调用工具请求
+
+response = model_with_tools.invoke(messages)
+
+  
+
+# 添加AIMessage到消息列表中
+
+messages.append(response)
+
+  
+
+# rprint(response)
+
+  
+
+tool_calls = response.tool_calls
+
+  
+
+for tool_call in tool_calls:
+
+    if tool_call["name"] == "get_weather":
+
+        # 大模型和Agent的主要区别在于：大模型不会主动的调用工具，所以这时候我们需要主动让工具调用。
+
+        # 返回的是ToolMessage类型消息，添加到消息列表中
+
+        tool_response = get_weather.invoke(tool_call)
+
+        print(type(tool_response))
+
+        messages.append(tool_response)
+
+  
+
+print("=====================> messages <=====================")
+
+for msg in messages:
+
+    msg.pretty_print()
+
+print("=====================> messages <=====================")
+
+final_response = model_with_tools.invoke(messages)
+
+print(f"final_response: \n{final_response}")
+```
+
+![[大模型调用工具过程.png]]
+
+## 1.3 `convert_to_openai_tool`
+位于 `langchain_core.utils.function_calling`，是 LangChain 底层核心工具转换函数，专门把各类工具对象转换成 **OpenAI 官方 Tool Call 标准 JSON Schema**
+**作用**
+OpenAI 接口调用工具时，必须传入固定结构：
+```
+{
+  "type": "function",
+  "function": {
+    "name": "...",
+    "description": "...",
+    "parameters": { ... }
+  }
+}
+```
+该函数自动完成：
+1. 提取函数 / 工具名称、文档描述、参数类型；
+2. 自动生成符合 OpenAI 规范的 JSON Schema；
+3. 统一输出标准字典，直接传给 ChatOpenAI 的 `tools` 参数；
+4. 兼容多类输入：原生函数、Pydantic、LangChain BaseTool、字典、第三方工具格式（Anthropic/Bedrock）。
+使用场景：
+`ChatOpenAI.bind_tools()` 底层自动调用
+```
+from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(model="gpt-4o")
+tools = [add, WeatherTool()]
+# bind_tools 内部循环执行 convert_to_openai_tool(tool)
+llm_with_tools = llm.bind_tools(tools)
+```
+注意事项：
+1. 函数必须写规范 docstring（Args 字段），否则参数 description 为空，模型调用准确率下降；
+2. 仅支持基础类型（int/str/float/bool）、Pydantic 嵌套，复杂自定义对象会解析失败；
+3. 字典输入会自动兼容 Anthropic/Bedrock 工具格式，自动转成 OpenAI 标准；
+
+## 1.4 @tool 装饰器
+`@tool` 是 `langchain_core.tools` 提供的装饰器，**快速把普通 Python 函数包装成 `BaseTool` 工具对象**，不用手动继承类写 `_run`，配合 `convert_to_openai_tool`、`bind_tools` 开箱即用，是日常定义工具最简洁的方式。
+示例：
+```
+@tool
+def get_weather(city: str) -> str:
+    """查询指定城市的天气
+    Args:
+        city: 城市名称，例如北京、上海
+    """
+    return f"{city} 晴天，26℃"
+
+# 转为OpenAI标准工具schema
+schema = convert_to_openai_tool(get_weather)
+print(json.dumps(schema, ensure_ascii=False, indent=2))
+```
+**支持的参数**
+```
+@tool(
+    name="query_weather",  # 自定义工具名，不填默认函数名
+    description="根据城市查询实时天气情况",  # 覆盖函数docstring描述
+    return_direct=False,   # False：工具结果交给LLM总结；True：直接返回工具结果给用户，不经过模型
+)
+def get_weather(city: str) -> str:
+    """原文档字符串"""
+    return f"{city} 多云"
+```
+==**注意**==
+1. **必须加参数类型注解** 
+	错误：`def func(city):` 
+	正确：`def func(city: str):` 装饰器靠类型注解自动生成 JSON Schema；
+2. **docstring 规范写 Args** 
+	用于提取每个参数的描述，模型知道该传什么；
+3. 支持多参数、int/float/bool 基础类型
+4. 没有description就必须写docstring，如果@tool的参数description和docstring同时存在，describeption参数优先级更高

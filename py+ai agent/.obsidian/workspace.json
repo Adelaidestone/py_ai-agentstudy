@@ -187,6 +187,7 @@
   },
   "active": "62b3ecfc70ca865e",
   "lastOpenFiles": [
+    "大模型调用工具过程.png",
     "模型调用流程.png",
     "工具是构建智能体的核心要素之一.png",
     "format()的输出是str.png",
@@ -204,7 +205,6 @@
     "openai的tools.png",
     "LangChain智能体生命周期.png",
     "ai agent/大模型认知和工程概览.md",
-    "模型对提示开头结尾位置更敏感，中间信息更容易忽略图.png",
     "RAG.md",
     "提示词工程.md",
     "photo",
