@@ -433,3 +433,50 @@ response2 = model.invoke(conversation)  # AI 记得
 **解决方案**：只保留最近 N 轮对话。具体的：
 - 总是保留 system 消息（定义角色） 
 - 只保留最近 N 轮对话，丢弃更早的历史
+```
+def keep_recent_messages(messages,max_pairs = 3):
+
+    """
+
+    保留最近的N轮对话
+
+    max_pairs : 保留对话的轮数 （每轮 = user + assistant）
+
+    """
+
+  
+
+    # 分离system 消息和对话消息
+
+    system_messages = [m for m in messages if m.get("role") == "system"]
+
+    conversation_messages = [m for m in messages if m.get("role") != "system"]
+
+  
+
+    # 只保留最近的消息对
+
+    recent_messages = conversation_messages[-(max_pairs * 2):]
+
+  
+
+    # 返回系统消息和最近的消息对
+
+    return system_messages + recent_messages
+```
+
+
+### 4.4 消息属性：content
+消息的 content 可以理解为数据内容，它是弱类型的，支持字符串和列表（列表元素通常为字典）
+**存储字符串**
+如果只是纯文本内容，直接传递字符串就好
+```
+from LangChain.messages import HumanMessage
+msg1 = HumanMessage(content = "你好啊") 
+msg2 = HumanMessage("你好啊") 
+print(msg1) 
+print(msg2)
+```
+**存储字典类型**
+如果需要发送的不只是文本，如多模态内容，则需要content的 字典内容遵循模型供应商的API规范，以 字典列表形式。
+参考官方文档：
