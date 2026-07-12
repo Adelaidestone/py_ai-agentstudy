@@ -939,9 +939,10 @@ Prompt 变干净了： 字段的 description 直接充当了 Prompt 的一部分
 类型安全： 编辑器能自动补全，代码运行前就能做类型检查。 极其稳定： 依托大模型厂商底层的 JSON 模式，输出错误率降到了极低。
 
 
-### 6.1.1 模式1：Pydantic
+### 6.1.1 Pydantic
 它通过在运行时强制执行类型提示，确保数据的正确性和一致性，是 生产场景首选。
-2.1.1 基本使用 
+
+**基本使用**
 需要满足的几个要素： 
 - 所有结构化输出的数据模型都必须继承 BaseModel 使用类型提示。
 - Pydantic 支持丰富的字段类型：str 、int、float、List[xxx]、Optional[xxx]等 
@@ -956,4 +957,151 @@ occupation: str = Field(description="职业")
 ```
 
 
+**高级特性**
+1. 可选字段
+	使用Optional指定字段为可选的。
+	```from typing import Optional from pydantic import BaseModel, Field class 
+	Person(BaseModel):    
+	"""人物信息"""    
+	name: str = Field(description="姓名")    
+	age: Optional[int] = Field(description="年龄")         occupation: str = Field(description="职业") structured_llm = model_with_closeai.with_structured_output(Person)
+	
+	 structured_llm.invoke("张三是一名医生")
+	```
+2. 默认值
+	LLM 未提供的信息会使用默认值。格式如下： 
+	- ```
+	  Field(default="默认值", description="描述") 
+	  ```
+	注意：不同模型提供商对default字段的支持是不同的。
+3. 枚举类型
+	使用枚举可以限制字段的可选值
+	应用场景： 自动填充 CRM 系统 工单自动分类 客服辅助
+4. 列表提取
+	应用场景： 
+	批量处理用户评论 
+	自动生成分析报告 
+	发现产品改进点
+	 自动化财务处理 
+	 OCR 后结构化 
+	 数据录入
+5. 嵌套结构输出
+	说明：LLM 能力有限，复杂嵌套结构可能会出错。
+	所以建议： 
+	嵌套层级 ≤ 3 层
+	使用清晰的 description 
+	必要时拆分成多个调用
+6. 限制条件
 
+**工作流解析**
+LangChain 会将 Pydantic Schema 转换为模型可理解的 JSON Schema，再通过 **Provider Native Structured Output** 或 **Function Calling** 等方式约束模型输出，最后利用 Pydantic 完成数据校验和对象化，将 LLM 的自然语言输出转化为类型安全、可验证、可直接供业务系统消费的数据对象。
+
+**第一步：定义结构**
+首先定义的是**业务需要的数据结构**,可以理解成：
+
+> **Pydantic = 后端接口中的 DTO（Data Transfer Object）**
+
+它规定了：
+- 有哪些字段
+- 字段类型
+- 是否必填
+- 默认值
+- 字段描述
+- 校验规则
+- 
+**第二步：Schema转换**
+LLM 并不认识 Pydantic。
+因此 LangChain 会先调用Pydantic的底层方法（model_json_schema())，将定义的结构转换成模型能够理解的 Schema（标准的 JSON Schema）。
+
+**第三步：约束模型输出策略**
+LangChain 会将这个 JSON Schema 包装进给大模型的 API 请求中。 
+- 现代方法（ .with_structured_output ）： 现代大模型普遍支持“函数调用/工具调用（Function/Tool Calling）”或“JSON Mode”。LangChain 会把 JSON Schema 作为 Tools 传入。 
+- 大模型侧的约束： 像 OpenAI 的 strict=True 参数，会启动模型的语法采样约束（Grammar based sampling）。大模型在解码生成 token 时，不是瞎猜，而是严格按照 JSON Schema 的语 法树进行选择，从而在模型底层级保证了输出格式绝不走样。
+
+**第四步：自动解析与验证**
+当大模型返回符合 JSON 规范的字符串后，LangChain 的 PydanticStructuredOutputParser）会接管工作： 
+1. 解析（Parsing）： 将字符串解析为 Python 字典。 
+2. 验证（Validation）： 将字典喂给你的 Pydantic 模型。Pydantic 会自动检查数据类型是否正确。 如果模型漏掉了必填字段，或者类型错误，这里会直接抛出验证错误（或者触发 LangChain 的重试机制）
+
+#### LangChain + GLM-5.2 结构化输出踩坑记录
+
+##### 问题现象
+
+使用 LangChain 的 Pydantic 结构化输出时，GLM-5.2 一直无法正常返回符合 Schema 的结果，最终导致结构化解析失败。
+
+---
+
+##### 原因分析
+
+虽然 GLM-5.2 提供的是 **OpenAI Compatible API**，但 **OpenAI Compatible 并不意味着完全兼容 OpenAI 的所有高级能力**。
+
+LangChain 的结构化输出底层主要有两种实现方式：
+
+1. **Provider Native Structured Output**
+    - 使用模型提供商原生的 `response_format=json_schema` 能力。
+    - 依赖模型本身完整支持 JSON Schema。
+2. **Function Calling（Tool Calling）**
+    - 将 Pydantic Schema 转换成一个 Tool。
+    - 模型通过调用 Tool 返回符合 Schema 的参数，再由 LangChain 转换为 Pydantic 对象。
+
+默认情况下，LangChain 会根据模型能力自动选择实现方式。
+
+由于使用的是 **OpenAI Compatible 接口**，LangChain 会将 GLM-5.2 当作 OpenAI 模型处理，因此自动选择的策略未必适合 GLM-5.2。
+
+---
+
+##### 解决方案
+
+强制指定结构化输出方式为 **Function Calling**。
+
+修改后，结构化输出立即恢复正常。
+
+---
+
+##### 为什么 Function Calling 更稳定？
+
+Function Calling 本质上是将 Pydantic Schema 转换成一个 Tool，模型只需要调用 Tool 并填写参数即可。
+
+相比之下，Provider Native Structured Output 需要模型完整支持 `response_format=json_schema`，而不少第三方 OpenAI Compatible 模型对此支持并不完善。
+
+目前很多国产模型的能力表现大致如下：
+
+- ✅ Tool Calling 支持较成熟
+- ⚠️ `response_format=json_schema` 支持存在兼容性问题
+
+因此，Function Calling 的兼容性通常更好。
+
+
+### 6.1.2 TypedDict
+TypedDict 是 Python 3.8+ 引入的一种类型提示工具，即带有类型声明的字典结构。适合需要快速定义 字典结构且无需 Pydantic 重量级功能的场景
+普通 dict 没有类型信息：
+```
+{   
+	"title": "盗梦空间",    
+	"year": 2010,    
+	"director": "克里斯托弗·诺兰",    
+	"rating": 9.3 
+}
+```
+TypedDict可以进一步说明：
+- 这个字典应该有哪些字段
+- 这个字段的类型是什么
+- TypedDict主要是类型声明,不是运行时强检验器。如果实例化字典给的字段名称和TypeDict不完全一致，会标记但是不会导致运行时异常
+	```
+	from typing_extensions import TypedDict
+	 class MovieDict(TypedDict):    
+	 title: str    
+	 year: int    
+	 director: str    
+	 rating: float 
+	 movie: MovieDict = {   
+	  "title1": "盗梦空间",    
+	  "year": 2010,    
+	  "director": "克里斯托弗·诺兰",    
+	  "rating": 8.8, } 
+	 print(movie)
+	```
+
+**基本使用**
+Annotated的使用
+用来在“类型”之外，添加一些额外xin
