@@ -1139,7 +1139,7 @@ Agent的核心组件
 - 几乎总是存在的：工具（Tools）
 - 有条件存在的：规划决策（Planning）
 - 最容易被忽略的：记忆（Memory）
-## 1.1 Agent创建和调用
+## 7.1 Agent创建和调用
 在 LangChain 0.x 时代，框架内的 Agent 系统经历了“碎片化”阶段。当时的设计理念是 “针对场景设计 特定 Agent”：
 如果你要实现思维链推理（ReAct），就用 `create_react_agent `；
 如果需要结构化输出，就用 `create_structured_chat_agent `； 
@@ -1197,7 +1197,7 @@ invoke调用的核心就是输入一系列消息（messages），每条消息通
 
 
 
-## 1.2 Agent调用Tools
+## 7.2 Agent调用Tools
 
 只有接入了一些工具，create_agent完成Agent创建才算完整。 Agent支持 静态和动态绑定工具，后者需要用到中间件，后面会讲。在执行时：
 
@@ -1274,6 +1274,7 @@ LLM
 ↓
 返回：北京今天小雨，22℃
 
+模型拿到天气之后继续思考：
 Round 2
 LLM
 ↓
@@ -1282,4 +1283,305 @@ LLM
 返回：附近火锅店列表
 
 
+模型再综合两个工具返回的信息：
+Round 3
+附近火锅店列表+天气情况
+↓
+LLM
+↓
+生成最终回答
+
+因此，一个用户问题可能经历：
+LLM
+→ Weather Tool
+→ LLM
+→ Restaurant Tool
+→ LLM
+→ Final Answer
+
+整个过程中，Agent Loop 运行了多轮，每轮模型都会根据新的上下文重新规划下一步。
 ```
+
+### 重试机制
+```
+from langchain.agents import create_agent
+
+from langchain.tools import tool
+
+from langchain.messages import SystemMessage, HumanMessage
+
+from dotenv import load_dotenv
+
+from rich import print as rprint
+
+  
+
+load_dotenv(override=True)
+
+  
+
+flag = 0
+
+  
+
+@tool
+
+def get_weather(city: str):
+
+    """
+
+    天气查询工具
+
+  
+
+    Args:
+
+        city: 城市名称
+
+    """
+
+    global flag
+
+    flag += 1
+
+  
+
+    if flag < 3:
+
+        # raise Exception("暂时无法访问")
+
+        return "TEMP_UNAVAILABLE: 天气服务暂时不可用，请稍后重试"
+
+  
+
+    return f"{city}今天天气挺好"
+
+  
+  
+
+messages = [
+
+    SystemMessage("""
+
+    你是一个天气助手。
+
+    当工具返回以 'TEMP_UNAVAILABLE:' 开头的结果时，
+
+    说明是临时故障，不要立即放弃；
+
+    你应再次调用同一个工具，最多重试 3 次。
+
+    如果 3 次后仍失败，再向用户说明服务暂时不可用。
+
+    """),
+
+    HumanMessage("你好，杭州今天的天气如何？")
+
+]
+
+agent = create_agent(model, tools=[get_weather])
+
+response = agent.invoke({"messages": messages})
+
+  
+
+rprint(response)
+```
+
+比如，在此例中，在 Agent 中，**LLM 并不知道工具什么时候恢复正常**。
+
+因此，当 Tool 返回一个**可恢复错误（Recoverable Error）**时，LLM 会重新进入下一轮思考（Reasoning），判断是否需要再次调用 Tool。
+
+整个过程并不是 Tool 自己重试，而是：
+
+> **LLM 在 Agent Loop 中重新决定："我要不要再调用一次 Tool？"**
+
+因此，每一次重试，本质上都是一次新的 Agent Loop。
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant User
+    participant Agent
+    participant LLM
+    participant Tool as get_weather()
+
+    User->>Agent: invoke(messages)
+
+    Agent->>LLM: 用户消息 + System Prompt
+
+    LLM->>Tool: get_weather("杭州")
+    Tool-->>LLM: TEMP_UNAVAILABLE
+
+    Note over LLM: 根据 System Prompt 判断：<br/>属于临时错误，可继续重试
+
+    LLM->>Tool: get_weather("杭州")
+    Tool-->>LLM: TEMP_UNAVAILABLE
+
+    Note over LLM: 第二次仍失败<br/>继续重试
+
+    LLM->>Tool: get_weather("杭州")
+    Tool-->>LLM: 杭州今天天气挺好
+
+    LLM->>Agent: Final Answer
+
+    Agent-->>User: 杭州今天天气挺好
+```
+
+### 常见问题
+**问题1：Agent如何选择工具**
+依据：工具的docstring、名称、参数定义（schema），选取与问题语义最匹配的工具
+
+**问题2：Agent为什么没有调用工具**
+原因：
+- 工具的docstring不清晰
+- 问题表述不清楚
+- 模型认为不需要工具
+
+**问题3：Agent选错工具**
+原因：
+- 多个工具的功能描述相似
+- 工具太多导致混淆
+如何解决：
+- 只给必要的工具
+- 工具描述要有明确区分
+- 在system_prompt中说明工具使用场景
+
+**问题4:Agent可以调用多少次工具**
+默认没限制，直到得到最终答案。但可能会中断调用：
+- 超时
+- 达到token限制
+- 模型决定停止
+**问题5：如何限制工具调用次数**
+LangChain 1.0 的 create_agent 默认使用 LangGraph，可以通过配置限制：
+```
+# 注意：这是高级用法，后续会详细学习
+ config = { "recursion_limit": 5  # 最多 5 步 } 
+ response = agent.invoke(input, config=config)
+```
+
+
+## 7.3 Agent的高级用法
+### 7.3.1 设置name
+name 在 Multi-Agent 场景中最常被提及，用于区分不同的 Agent。但它的作用并不局限于多 Agent 编排。在实际工程中，出现如下场景，通常都建议为 Agent 设置一个清晰且稳定的 name 。
+
+|优先级|内容|作用|
+|---|---|---|
+|⭐⭐⭐⭐⭐|Instructions（系统提示）|决定 Agent 的行为和能力边界|
+|⭐⭐⭐⭐☆|Description（职责描述）|帮助其他 Agent/LLM 选择它|
+|⭐⭐⭐⭐☆|Name（名称）|提供清晰的语义标签，辅助任务路由|
+|⭐⭐☆☆☆|其他元数据（标签、版本等）|工程管理用途|
+### 7.3.2 系统提示词
+使用 create_agent 创建 Agent 时，需传入 模型和工具、可选地传入 系统提示词。提示词为Agent 提供了任务背景、行为准则和操作指南
+使用建议： 
+- 明确说明 Agent 的角色 
+- 定义输出格式 
+- 说明何时使用工具
+### 7.3.3 结构化输出
+结构化输出是Agent的核心功能之一，它允许Agent以特定、可预测的格式返回数据，而不是传统的自然 语言响应。通过结构化输出，开发者可以直接获得Pydantic模型、JSON对象或数据类等结构化数 据，这些数据能够被应用程序直接使用，无需复杂的解析过程。
+
+| 维度   | 模型的结构化输出               | Agent结构化输出                |
+| ---- | ---------------------- | ------------------------- |
+| 操作对象 | 作用于大模型                 | 作用于Agent                  |
+| 解析时机 | 每次模型调用生成AIMessage时     | 仅在Agent决定“任务结束”并输出最终答案时解析 |
+| 数据流转 | 模型->结构化对象              | 模型->工具->反思->...->结构化对象    |
+| 绑定方式 | with_structured_output | 使用response_format参数       |
+| 场景   | 单次、确定性的任务              | 多步、复杂推理的任务                |
+|      |                        |                           |
+#### 结构化输出的4种策略
+LangChain的create_agent()函数自动处理结构化输出的全过程。用户只需通过“response_format”参 数设置期望的输出模式（Schema）。 
+当模型生成结构化数据时，系统会自动捕获、验证并将结果存储在Agent状态的structured_response 键中。
+```
+def create_agent( 
+... response_format: Union[ 
+	ToolStrategy[StructuredResponseT], 
+	ProviderStrategy[StructuredResponseT], 
+	type[StructuredResponseT], 
+	None, 
+	]
+```
+
+##### ① ProviderStrategy
+使用模型提供商的 原生结构化输出功能实现结构化输出。 
+这里所说的“原生结构化输出”指的是大语言模型（LLM）提供商通过其API直接提供的、在模型响应 阶段就强制保证 输出格式符合预定规范的能力，这种能力能够在模型生成内容的源头确保结构化 准确性。 适用于支持原生结构化输出的模型，比如OpenAI、Anthropic Claude或xAI Grok等。
+
+##### ② ToolStrategy 
+对于不支持原生结构化输出的模型，LangChain采用“ToolStrategy”工具调用的方式实现结构化输出。 此策略兼容绝大多数 支持工具调用的现代模型，其核心原理是动态创建一个" 入参数对应着期望的数据结构。 当模型需要生成最终答案时，系统会引导模型 虚拟工具"，该工具的输 "调用"这个虚拟工具 ，从而间接产生符合要求的结构化数据。
+
+
+###### 自定义工具消息：tool_message_content参数
+如果采用ToolStrategy策略处理结构化输出时，LangChain会在消息列表末尾追加一条 Tool_message，让整个链路完整。但实际上没有实际的工具执行，这是一条伪消息。
+
+我们可以通过ToolStrategy的 tool_message_content参数定制其消息内容，将指定的内容写入对话历 史的提示信息，这样做的好处如下：
+1. 在最终用户可见的对话流中，使用更自然的消息替代原始数据。
+2. 用简短的确认信息替代可能很长的数据块，减少token消耗。
+
+当不设置 tool_message_content时，模型收到的 ToolMessage里就包含了像 {'name': '张三', 'email': 'zhangsan@email.com'... ...} 这样的具体数据。
+当设置了tool_message_content时，模型收到的 ToolMessage只是一个预定义的确认信息，如“ 格式化输出成功！”。这种方式节省了上下文窗口的令牌 消耗，并且让对话流对最终用户更友好。 说明： 无论 tool_message_content如何设置，成功提取的结构化数据最终都会正确存入 result["structured_response"] 返回，自定义消息仅影响对话历史中的一条记录。
+```
+{
+    'messages': [
+        ...
+        ToolMessage(
+            content="Returning structured response: name='小明' email='songhk@atguigu.com' phone='12345678912'",
+            name='ContactInfo',
+            id='6e1b976c-1e86-41ba-baf0-7a220b95fb83',
+            tool_call_id='call_qdjCgRH5xh8IVsPRKG5DrDKa'
+        )
+    ],
+    'structured_response': ContactInfo(name='小明', email='songhk@atguigu.com', phone='12345678912')
+}
+```
+
+```
+{   
+    'messages': [
+      ...
+        ToolMessage(
+            content='已成功抽取信息',
+            name='ContactInfo',
+            id='a3ea467d-b8d3-437d-b953-878caac30eaa',
+            tool_call_id='call_-7453331798454435228'
+        )
+    ],
+    'structured_response': ContactInfo(name='小明', email='songhk@atguigu.com', phone='12345678912')
+}
+```
+
+
+##### ③ type / AutoStrategy
+官方没有在参数列表或官方文档列出这种策略，但阅读源码可以看到。
+当我们直接传入一个定义类型时，LangChain会自动包装为AutoStrategy，触发自动选择策略：如果 模型支持原生结构化输出（如OpenAI、Anthropic Claude或xAI Grok），则优先使用 ProviderStrategy；否则使用ToolStrategy。
+
+##### ④ None 
+默认配置，表示不以结构化输出，以自然语言响应用户问题
+
+### 7.3.4 错误处理：handle_errors参数
+受限于模型能力，大模型输出的内容可能并不符合格式要求，ToolStrategy提供了结构化过程错误处理策略，以下是主要的几种方式及其用途：
+- handle_errors=True： LangChain默认方式 ， handle_errors 捕获所有异常，并使用LangChain 内置的、信息明确的错误消息模板提示模型重试，确保最终能得到符合预定格式的有效数据。适用于大多数希望自动处理错误的通用场景。 
+- handle_errors=False：关闭自动重试机制，任何异常都会 直接抛出，会中断程序运行。 
+- handle_errors="自定义字符串"：捕获所有异常，但使用开发者 预设的固定字符串作为错误消 息。适用于需要统一、友好的用户提示，或进行特定业务引导的场景。 
+- handle_errors=ExceptionType：仅 捕获指定类型(如ValueError) 或元组中的异常类型并进行重 试， 其他异常直接抛出。适用于需要 精准控制，只对特定错误进行重试的场景。 
+- handle_errors=callable：灵活性最高的方式，使用开发者 自定义的函数来处理异常，可根据不 同的异常类型返回差异化的提示信息。适用于需要复杂、精细化错误处理的场景。
+
+### 7.3.5 流式输出
+通过invoke调用Agent时，内部可能经历多次调用，长时间看不到调用情况，用户体验不好，可以通 过流式调用（渐进式显示输出）优化用户体验， 实时显示 Agent 运行过程中的更新。特别是在处理 LLM 延迟时尤其有效。
+流式输出好处： 
+- 大型语言模型生成完整响应通常需要几秒钟时间，对于长输出可能达到10-20 秒，用户期望即时反 馈， 流式传输让等待过程更加可控。 
+- 相比非流式传输需要用户长时间等待完整响应，流式传输可以立即显示文字逐渐出现的效果， 幅降低用户的等待焦虑。
+
+| 模式                                          | 输出                                                | 适用场景                               |
+| ------------------------------------------- | ------------------------------------------------- | ---------------------------------- |
+| `agent.stream(..., stream_mode="updates")`  | 每个节点（LLM、Tool、Agent）的状态更新，不输出 Token               | 调试 Agent 执行流程、观察工具调用、查看 Agent Loop |
+| `agent.stream(..., stream_mode="messages")` | LLM 实时生成的 Token，同时包含 Tool Calling、Tool Result 等消息 | 聊天机器人、Web 对话、需要打字机效果的应用            |
+| `agent.stream(..., stream_mode="values")`   | 每轮循环结束后的完整 State（messages、structured_response 等）  | 调试 State、查看每轮 Agent 执行后的完整上下文      |
+| `agent.stream(..., stream_mode="custom")`   | 开发者通过 `get_stream_writer()` 自定义输出内容               | 长耗时 Tool、任务进度、日志、百分比等自定义信息         |
+| `agent.astream(...)`                        | `stream()` 的异步版本                                  | FastAPI、WebSocket、异步 Agent 服务      |
+| `agent.astream_events(...)`                 | 输出整个 Agent 生命周期事件（Start、End、LLM、Tool、Chain 等）     | 可观测性、Tracing、监控、日志分析、LangSmith 集成  |
+如果从工程角度，我通常这样选择：
+- **前端聊天（Chat UI）** → `messages`
+- **调试 Agent Loop** → `updates`
+- **查看最终 State / Structured Output** → `values`
+- **显示工具执行进度** → `custom`
+- **FastAPI / WebSocket 服务** → `astream`
+- **监控、日志、LangSmith、可观测性** → `astream_events`
