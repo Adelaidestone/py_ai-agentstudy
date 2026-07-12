@@ -929,4 +929,31 @@ LangChain的结构化输出（Structured Output） 指的是：
 - TypedDict（轻量类型约束）
 - JSON Schema（与前后端/跨语言接口最通用） 
 - dataclass
+模型对象可以调用 .with_structured_output() 绑定输出模式（schema）。 只有Pydantic返回的是Schema类实例，其余三种方式返回的都是 匹配时会抛出异常
+
+
+为什么Padantic结构化输出机制这么受欢迎？ 
+在没有 Pydantic 等结构化方案之前，开发者需要写大量的 Prompt 苦口婆心地求大模型“请返回 JSON， 不要带任何解释”，然后自己写繁琐的 json.loads() 和 try...except 。
+而有了 Pydantic 等结构化方案结合.with_structured_output() 之后： 
+Prompt 变干净了： 字段的 description 直接充当了 Prompt 的一部分。 
+类型安全： 编辑器能自动补全，代码运行前就能做类型检查。 极其稳定： 依托大模型厂商底层的 JSON 模式，输出错误率降到了极低。
+
+
+### 6.1.1 模式1：Pydantic
+它通过在运行时强制执行类型提示，确保数据的正确性和一致性，是 生产场景首选。
+2.1.1 基本使用 
+需要满足的几个要素： 
+- 所有结构化输出的数据模型都必须继承 BaseModel 使用类型提示。
+- Pydantic 支持丰富的字段类型：str 、int、float、List[xxx]、Optional[xxx]等 
+- 使用 Field() 添加字段默认值和描述，帮助 LLM 理解字段含义
+```
+from pydantic import BaseModel, Field class Person(BaseModel):    
+"""人物信息"""    
+name: str = Field(description="姓名")    
+age: int = Field(description="年龄")    
+occupation: str = Field(description="职业")
+#需要有描述，没有描述，llm可能格式错误
+```
+
+
 
