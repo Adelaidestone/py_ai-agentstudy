@@ -78,8 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "976aa9499150a794",
@@ -187,6 +186,9 @@
   },
   "active": "62b3ecfc70ca865e",
   "lastOpenFiles": [
+    "ai启示录.md",
+    "LangChain.md",
+    "deepseek中关于tool_choice的解释.png",
     "大模型调用工具过程.png",
     "模型调用流程.png",
     "工具是构建智能体的核心要素之一.png",
@@ -196,14 +198,11 @@
     "content_blocks输出格式化.png",
     "2026-07-11.md",
     "未命名.base",
-    "LangChain.md",
     "用参数调用tools.png",
     "流程控制语句.md",
     "Python_数据类型.md",
     "LangChain、LangGraph、DeepAgent关系.png",
     "目录.base",
-    "openai的tools.png",
-    "LangChain智能体生命周期.png",
     "ai agent/大模型认知和工程概览.md",
     "RAG.md",
     "提示词工程.md",

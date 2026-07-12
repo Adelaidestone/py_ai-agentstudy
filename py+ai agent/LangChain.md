@@ -634,12 +634,12 @@ LangChain 的 Chain 只会自动传入**运行时上下文变量**，全局固�
 - 2. 支持动态可变长度消息列表:历史对话条数不固定（1 轮、10 轮、100 轮都可以），占位符会自动把列表里每一条消息平铺到提示词中，无需手动拼接。
 - 类型安全：普通 `PromptTemplate` 变量只能是字符串； `ChatPromptTemplate` 搭配 `MessagesPlaceholder` 支持结构化消息，兼容 OpenAI / 通义千问 / Claude 等所有支持消息格式的模型，不会出现格式错乱。
 
-# Tools
-## 1. 概述
+# 5. Tools
+## 5.1 概述
 工具是赋予大模型语言与外部世界交互能力的关键组件，从而能够让智能体哦执行搜索、计算、数据库查询、邮件发送或调用第三方API等，进而构建功能强大的ai应用。借助工具，大模型才能从认识世界走向改变世界
 ![[工具是构建智能体的核心要素之一.png]]
 
-## 1.1 工具调用的整体流程
+## 5.2 工具调用的整体流程
 经典流程如下
 ```mermaid
 flowchart LR 
@@ -661,7 +661,7 @@ flowchart LR
 步骤3：开发者手动执行工具：用户从响应中提取工具调用信息并手动调用对应的工具（比如工具.invoke()）。 
 步骤4：将工具执行结果ToolMessage传递给模型生成回复
 
-## 1.2 从Message流转看工具的调用
+## 5.3 从Message流转看工具的调用
 ```
 from langchain.messages import HumanMessage, ToolMessage
 
@@ -749,7 +749,7 @@ print(f"final_response: \n{final_response}")
 
 ![[大模型调用工具过程.png]]
 
-## 1.3 `convert_to_openai_tool`
+## 5.4 `convert_to_openai_tool`
 位于 `langchain_core.utils.function_calling`，是 LangChain 底层核心工具转换函数，专门把各类工具对象转换成 **OpenAI 官方 Tool Call 标准 JSON Schema**
 **作用**
 OpenAI 接口调用工具时，必须传入固定结构：
@@ -782,7 +782,7 @@ llm_with_tools = llm.bind_tools(tools)
 2. 仅支持基础类型（int/str/float/bool）、Pydantic 嵌套，复杂自定义对象会解析失败；
 3. 字典输入会自动兼容 Anthropic/Bedrock 工具格式，自动转成 OpenAI 标准；
 
-## 1.4 @tool 装饰器
+## 5.5 @tool 装饰器
 `@tool` 是 `langchain_core.tools` 提供的装饰器，**快速把普通 Python 函数包装成 `BaseTool` 工具对象**，不用手动继承类写 `_run`，配合 `convert_to_openai_tool`、`bind_tools` 开箱即用，是日常定义工具最简洁的方式。
 示例：
 ```
@@ -817,3 +817,116 @@ def get_weather(city: str) -> str:
 	用于提取每个参数的描述，模型知道该传什么；
 3. 支持多参数、int/float/bool 基础类型
 4. 没有description就必须写docstring，如果@tool的参数description和docstring同时存在，describeption参数优先级更高
+
+## 5.6 `args_schema`
+`args_schema` 是 LangChain 工具体系中**定义工具入参规范**的核心属性，全称 arguments schema，用来规定工具接收哪些参数、类型、描述、校验规则、枚举、默认值等
+支持两种载体：
+1. **Pydantic BaseModel 子类**（最常用，推荐
+2. ）
+3. 原生 JSON Schema 字典（少数场景）
+
+**作用**：
+- 自动生成OpenAI tools标准parameters
+- 参数自动校验、抛异常
+- 复杂参数支持：嵌套对象、枚举、正则、数值边界、长度限制，纯函数注解做不到
+- 统一参数说明：不用依赖函数docstring写Args，模型读取更稳定
+
+#### 方式1：使用Pydantic模型定义
+当工具的参数变得复杂，需要枚举、范围限制或者更复杂的业务逻辑验证，Pydantic是理想的选择，提供强大的类型检测和数据验证
+能够精确控制工具参数的格式和验证规则，让大模型更准确理解如何调用工具
+
+##### ==pandantic类型的定义==
+1. BaseModel基类
+通过继承核心基类`BaseModel`定义数据模型，从而声明字段结构、类型约束、默认值以0及校验规则。
+```
+from pydantic import BaseModel 
+class WeatherInput(BaseModel):    
+	city: str 
+print(WeatherInput(city="北京"))
+```
+
+2. field
+用来“定制字段”的函数，可用于设置默认值、描述等。
+- 设置默认值
+  ```
+  from pydantic import BaseModel, Field 
+  class WeatherInput(BaseModel):    
+	  city: str = Field(        
+	  default= "北京"   
+	  ) 
+	print(WeatherInput())
+  ```
+  
+- 设置参数描述信息
+```
+from pydantic import BaseModel, Field 
+class WeatherInput(BaseModel):    
+	city: str = Field(        
+		default= "北京",        
+		description="城市"   )    
+		include_forecast: bool = Field(        
+		default=False,        
+		description="是否包含未来五日天气预报"   ) 
+		
+		print(WeatherInput())
+```
+
+3. Literal
+`Literal` 是 Python 标准库（`typing`）的类型限定工具，搭配 Pydantic 用于**限制字段只能取固定几个值**，相当于内置枚举，专门给 LangChain 工具 `args_schema` 做参数约束。
+```
+
+class WeatherArgs(BaseModel):
+    city: str
+    # 默认使用摄氏度
+    unit: Literal["celsius", "fahrenheit"] = Field(
+        default="celsius",
+        description="温度单位"
+    )
+
+```
+`convert_to_openai_tool` 读取 Pydantic Literal,parameters 中会自动出现 `enum:[...]`,只会从`enum`里选择传参,大模型会看到可选列表，调用准确率大幅提升
+
+##### ==使用 Json Schema定义==
+在 LangChain 中，还可以直接使用 `JSON Schema 字典`来定义工具的参数模式。这种方式提供了极大 的灵活性。 
+因为工具参数模式可以基于数据库配置或用户输入在运行时动态生成，所以这种方式特别适合参数结构需要动态生成的场景。
+```
+from langchain.tools import tool 
+from langchain_core.utils.function_calling import convert_to_openai_tool 
+
+weather_schema = {    
+	"type": "object",    
+	"properties": {        
+		"location": {"type": "string"},        
+		"units": {"type": "string"},        
+		"include_forecast": {"type": "boolean"}   },    
+		"required": ["location", "units", "include_forecast"]
+	}
+}
+```
+
+## 5.7 拓展：强制使用工具
+### tool_choice参数说明
+
+`bind_tools` 可以传递参数 `tool_choice `，用于控制是否强制使用工具。 该字段最终会作为 `payload` 的 `tool_choice` 字段传递给模型，OpenAI和Deepseek的官方API服务对于 `tool_choice `的取值做了相同的规定。
+![[deepseek中关于tool_choice的解释.png]]
+none ：模型不会调用任何工具。 
+auto ： 默认值，模型可以自主决定不调用或调用任意数量的工具。 
+required ：模型必须调用工具，数量不限。
+某些场景下我们希望调用特定的工具，仍然可以用tool_choice解决。
+
+
+# 6.结构化输出（Structured Output）
+LangChain的结构化输出（Structured Output） 指的是：
+`要求模型最终返回一个符合预定义结构的数据对象，例如固定字段的JSON、Pydantic 模型、 TypedDict，而不再是无格式的自然语言文本`
+它的核心目标是把“自然语言回答”变成“ 程序可以稳定消费的数据”。
+这样做的价值主要有三点： 
+- 更容易被代码处理：下游系统可以直接读字段，而不是再从自然语言里做解析。 
+- 结果更稳定：减少“模型说法变了但意思差不多”导致的解析失败。 
+- 更适合工程化：适用于表单抽取、分类、路由、调用工具参数生成、工作流状态传递等场景。
+## 6.1 结构化输出模式
+目前LangChain 1.x 支持多种Schema与结构化输出方式： 
+- Pydantic（字段校验、描述、嵌套结构，功能最丰富）
+- TypedDict（轻量类型约束）
+- JSON Schema（与前后端/跨语言接口最通用） 
+- dataclass
+
