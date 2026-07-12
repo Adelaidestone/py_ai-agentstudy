@@ -1152,3 +1152,134 @@ Agent的核心组件
 
 
 LangChain 在 1.0 版本后，团队做出了彻底重构：将所有 Agent 的创建方式统一为一个入口： `create_agent()`。它取代了旧版本中的 `create_react_agent 、 create_json_agent 、 create_tool_calling_agent `等多种分支函数，真正让开发者用一行代码即可创建任何类型的智能体。 同时在底层通过“中间件机制（Middleware）”和“标准模型接口（invoke / stream）”实现全局统一。这让框架更轻、更稳，也更易于被集成到其他 Agent 平台中。
+
+创建agent
+```
+from langchain.chat_models import init_chat_model 
+from langchain.agents import create_agent 
+from langchain_deepseek import ChatDeepSeek 
+from dotenv import load_dotenv 
+import os load_dotenv(override=True) 
+# 以ChatDeepSeek为例 
+# model = ChatDeepSeek(model="deepseek-v4-flash") 
+# 以init_chat_model为例 
+model = init_chat_model(    
+	model="gpt-5.4-mini",    
+	model_provider="openai",    
+	api_key=os.getenv("CLOSEAI_API_KEY"),    
+	base_url=os.getenv("CLOSEAI_BASE_URL") 
+	) 
+	agent = create_agent(model) 
+	print(type(agent)) 
+```
+
+`agent.invoke()`是Agent 最基本的同步调用方法，它会阻塞程序执行直到返回最终结果。
+具体的： 
+输入：传入的参数为字典类型，字典内通过messages字段传递消息列表。即：“ {"messages": [{"role": "...", "content": "..."}]} ” 
+输出：通过invoke调用Agent，底层可能会经历多轮交互，返回的是完整的消息列表，被封装在 字典中，是messages字段的值
+```
+response = agent.invoke({"messages": [...]}) 
+# response 是字典类型 
+{    "messages": 
+	[        
+	HumanMessage(...),       # 用户问题
+	AIMessage(...),          # AI 工具调用        
+	ToolMessage(...),        # 工具返回结果        
+	AIMessage(...)           # 最终回答 ← 通常取这个  
+	] 
+} 
+
+# 获取最终回答 
+
+final_answer = response['messages'][-1].content
+```
+invoke调用的核心就是输入一系列消息（messages），每条消息通常包含 role（如 "user", "assistant", "system", "tool"）和 "content"。 我们也可以在message列表的开头加入"system"角色的消息来定义Agent的行为。
+
+
+
+## 1.2 Agent调用Tools
+
+只有接入了一些工具，create_agent完成Agent创建才算完整。 Agent支持 静态和动态绑定工具，后者需要用到中间件，后面会讲。在执行时：
+
+```mermaid
+graph TD
+    %% 节点定义
+    A["用户问题 (User Input)<br>输入问题或指令"]
+    B["[Agent 分析]<br>理解、规划、意图识别"]
+    C{需要工具?}
+    D["直接回答"]
+    E["调用工具<br>API 调用、查询数据、计算"]
+    F["获取结果<br>处理和解析工具返回数据"]
+    G["生成回答<br>综合信息，提供最终响应"]
+
+    %% 连线
+    A -- 1 --> B
+    B -- 2 --> C
+    C -- 否 (No) --> D
+    C -- 是 (Yes) --> E
+    E -- 3a --> F
+    F -- 4 --> G
+    D -- 5 --> G
+
+    %% 样式配色（贴近原图）
+    classDef styleA fill:#cce5ff,stroke:#3388dd,stroke-width:2px
+    classDef styleB fill:#e5ddff,stroke:#9966dd,stroke-width:2px
+    classDef styleC fill:#ffe8bb,stroke:#ee9933,stroke-width:2px
+    classDef styleDE fill:#ddeeff,stroke:#4477bb,stroke-width:2px
+    classDef styleG fill:#d9f7dd,stroke:#44bb66,stroke-width:2px
+
+    class A styleA
+    class B styleB
+    class C styleC
+    class D,E,F styleDE
+    class G styleG
+```
+LangChain内置工具列表： [Tool integrations - Docs by LangChain](https://docs.langchain.com/oss/python/integrations/tools)
+具有代表性工具：
+![[langchain内置工具.png]]
+
+当用户提出一个复杂需求时，Agent会像人类一样，先理解任务、规划步骤、使用合适的工具（如搜索 网络、查询数据库、执行计算）获取信息，Agent 会在一个循环中 反复调用模型和工具，直到某次模 型输出中 不再包含工具调用则结束，最后综合所有信息给出最终答案。
+```
+用户问题
+    │
+    ▼
+LLM 思考
+    │
+    ├── 调用 Tool？
+    │      │
+    │      ▼
+    │   Tool 返回结果
+    │      │
+    └──────┘
+       （进入下一轮）
+    │
+    ▼
+LLM 判断是否结束
+    │
+    ├── 否 → 继续循环
+    └── 是 → 输出最终答案
+```
+
+### 一次任务需要调用多个工具（Multi-Step Tool Calling）
+有些问题，仅靠一次工具调用无法完成，需要多个工具协同工作。
+例如：
+
+> "帮我查一下北京今天的天气，然后根据天气推荐附近适合吃火锅的餐厅。"
+
+```
+Round 1
+LLM
+↓
+调用 Weather Tool
+↓
+返回：北京今天小雨，22℃
+
+Round 2
+LLM
+↓
+调用 Map/Restaurant Tool
+↓
+返回：附近火锅店列表
+
+
+```
