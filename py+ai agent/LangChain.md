@@ -1585,3 +1585,6 @@ def create_agent(
 - **显示工具执行进度** → `custom`
 - **FastAPI / WebSocket 服务** → `astream`
 - **监控、日志、LangSmith、可观测性** → `astream_events`
+
+
+# 8. 中间件（Middleware）
