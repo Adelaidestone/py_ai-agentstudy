@@ -187,6 +187,7 @@
   },
   "active": "d5d01a1772ed5b7b",
   "lastOpenFiles": [
+    "钩子函数.png",
     "langchain内置工具.png",
     "content_blocks输出格式化.png",
     "ai启示录.md",
@@ -203,7 +204,6 @@
     "ai agent/大模型认知和工程概览.md",
     "ai agent/NumPy基础.md",
     "函数.md",
-    "大模型调用工具过程.png",
     "面向对象.md",
     "未命名.base",
     "提示词工程.md",

@@ -1688,12 +1688,10 @@ G --> H
 
 中间件的价值就在于把这些和业务无关，但是与执行过程强相关的横切逻辑，从Agent主流程中分离出来。让Agent主体代码聚焦业务，中间件用来实现“拦截流程、修改流程、增强流程”
 
-# 2.常用内置中间件
-## 2.1 SummarizationMiddleware
+## 2.常用内置中间件
+### 2.1 SummarizationMiddleware
 作用：对历史消息列表作摘要&总结，达到压缩上下文效果
 原理 : 在达到触发条件时，调用大模型对历史消息进行摘要，有摘要的结果将会作为HumanMessage，放到消息列表最开始的位置
-
-
 
 ### 
 2.1.1 参数说明 
@@ -1721,7 +1719,7 @@ G --> H
 如果历史消息token数大于该值，则会被裁剪。默认为"4000"。 
 如果trigger用token作为度量，调大触发阈值时，当前配置项应相应调整，否则会丢失信息。
 
-## 2.2 HumanIntheLoopMiddleWare
+### 2.2 HumanIntheLoopMiddleWare
 HumanInTheLoopMiddleware（人在环中间件、人工审核中间件）在工具调用前中断Agent运行待用户对工具调用请求决策。可选的决策有： 
 - approve（同意执行）  
 - edit（编辑调用配置后执行）
@@ -1737,7 +1735,7 @@ HumanInTheLoopMiddleware（人在环中间件、人工审核中间件）在工�
 默认为 "Tool execution requires approval" 
 
 
-## 2.3 PIIMiddleware
+### 2.3 PIIMiddleware
 敏感信息保护。 
 PII中间件用于检测和处理对话中的个人身份信息（Personally Identifiable Information，PII），支持自定义处理策略。
 
@@ -1774,7 +1772,7 @@ email": detect_email,
 通常我们只在模型调用前检测。因为PII检测的主要目的是避免将敏感信息发送给模型服务导致信息泄露。
 
 
-## 2.4 TodoListMiddleware
+### 2.4 TodoListMiddleware
 TodoListMiddleware中间件赋予了Agent任务规划和追踪进度的能力，可以应对复杂的多步任务。 
 比如，当一个大任务需要被拆解为 3 个以上的子任务，且前面的步骤是后面步骤的前提时，如果不列 Todo 列表，大模型在执行到第 3 步时，很容易忘记自己最初的目标，或者在工具返回大量报错信息后 “应激”，直接跳过验证去回答用户。 
 此时，TodoListMiddleware 中间件强制它把计划挂在全局状态里，时刻提醒它“下一步该干什么”。
@@ -1790,5 +1788,259 @@ TodoListMiddleware中间件赋予了Agent任务规划和追踪进度的能力，
 典型场景： 
 - 任务链路长、步骤多，且有严格的先后依赖关系 
 - 需要在前端 UI 界面实时展示 Agent 的“思考与执行进度”
+To-do list的创建和维护是通过调用 2.4.1 参数说明 write_todos工具 实现的。
+
+### 2.4.1参数说明
+1.system_prompt —自定义指导todo列表使用的提示词 
+不提供则使用内置提示词，通常不必提供。 
+2.tool_description —自定义write_tools工具的描述信息 
+不提供则使用内置描述，通常不必提供。
 
 
+
+### 2.5 常用中间件
+| Middleware | 功能 | 原理 | 常用参数 |
+|------------|------|------|----------|
+| HumanInTheLoopMiddleware | 人工审批（HITL） | 在指定工具调用前暂停 Agent，等待用户确认、修改或拒绝，再继续执行。适用于支付、删除数据等高风险操作。 | `interrupt_on`、`description_prefix` |
+| PIIMiddleware | 敏感信息处理 | 在模型输入或输出阶段识别 PII（邮箱、手机号、身份证等），根据策略进行 Mask、Redact、Hash 或 Block。 | `pii_type`、`strategy`、`apply_to_input`、`apply_to_output` |
+| SummarizationMiddleware | 上下文压缩 | 当消息数量或 Token 超过阈值时，将历史对话总结为摘要，并替换旧消息，以降低上下文长度。 | `max_tokens_before_summary`、`messages_to_keep`、`summary_prompt`、`model` |
+| ToolCallLimitMiddleware | 限制工具调用次数 | 统计 Agent 的 Tool Call 次数，超过限制后终止执行或抛出异常，防止无限循环。 | `max_tool_calls` |
+| ModelFallbackMiddleware | 模型降级（Fallback） | 主模型调用失败（超时、限流、异常）时，自动切换到备用模型继续执行，提高稳定性。 | `fallback_models`、`exceptions_to_handle` |
+| ModelRetryMiddleware | 自动重试 | 当模型请求失败时，按照设定策略自动重试，避免临时网络或服务异常导致失败。 | `max_retries`、`retry_on`、`backoff_strategy` |
+| DynamicModelMiddleware | 动态模型选择 | 根据请求内容、Token 数量、复杂度等条件，在运行时动态选择不同模型（如 GPT-4、GPT-4o-mini）。 | `model_selector` |
+| ToolSelectionMiddleware | 工具选择控制 | 在模型真正调用工具前，对 Tool Call 进行过滤、替换或禁止调用，实现工具白名单/黑名单。 | `allowed_tools`、`blocked_tools` |
+| ContextEditingMiddleware | 上下文编辑 | 在消息发送给模型之前修改上下文，例如删除消息、增加系统提示、插入记忆等。 | `before_model`、`after_model` |
+| MessageLoggingMiddleware | 日志记录 | 记录 Agent 的输入、输出、Tool Call、耗时等信息，便于调试和监控。 | `logger`、`log_level` |
+| CostTrackingMiddleware | Token/费用统计 | 统计每次模型调用的 Token 数和费用，可用于预算控制和监控。 | `callback_handler`、`cost_tracker` |
+| CustomMiddleware | 自定义中间件 | 继承 AgentMiddleware，自定义 before/after model、before/after tool 等生命周期逻辑，实现业务扩展。 | `before_model()`、`after_model()`、`before_tool()`、`after_tool()` |
+
+
+
+### 2.6 多个中间件组合及执行顺序
+多个 Middleware 同时使用时，可以把它理解成 **责任链（Chain of Responsibility）**。
+LangChain 会按照**注册顺序**依次执行 `before_*` 阶段，而在 `after_*` 阶段则按**相反顺序**执行，因此整体类似函数调用栈--先进后出
+
+```
+middleware = [
+    PIIMiddleware(),
+    SummarizationMiddleware(),
+    HumanInTheLoopMiddleware(),
+]
+```
+
+```
+用户输入
+    │
+    ▼
+① PIIMiddleware.before_model
+   脱敏敏感信息
+    │
+    ▼
+② SummarizationMiddleware.before_model
+   判断 Token 是否超限，必要时压缩历史
+    │
+    ▼
+③ HumanInTheLoopMiddleware.before_model
+   （通常不会处理模型输入）
+    │
+    ▼
+LLM 推理
+    │
+    ▼
+③ HumanInTheLoopMiddleware.after_model
+    │
+    ▼
+② SummarizationMiddleware.after_model
+    │
+    ▼
+① PIIMiddleware.after_model
+   对输出再次进行敏感信息处理
+    │
+    ▼
+返回最终结果
+```
+
+### 2.7 自定义中间件
+某些复杂场景下，官方内置的中间件无法满足需求，可以通过Hook函数构建自定义中间件
+
+hook函数（钩子函数）
+Hook 函数，中文常叫 钩子函数，指的是：在某个既定流程的特定时机，被框架、系统或主程序 调用的扩展函数。
+![[钩子函数.png]]
+	可以将其理解：
+	主流程预留了一些插槽，允许你在这些位置上挂上自己的函数，这种被挂进去并在特定时机执行的函数，就是hook函数
+核心特点： 
+1. 不是你主动在业务代码里随便调用的，而是当流程运行到某个“钩子点”时，系统自动触发它。 
+ 2. 它依附于一个更大的执行流程。比如“请求开始前”“模型调用前”“任务结束后”“异常发生时”等。 
+ 3. 它的作用是让你在不改主流程源码的前提下插入自己的逻辑。例如做 日志、鉴权、 修改输入、 拦截输出、 清理资源等。
+
+
+#### 2.7.1 LangChain的hook函数分类
+##### Node_style hooks(节点风格钩子)
+顾名思义，它们在流程的 特定节点运行。 
+适合顺序逻辑，如记录日志、验证 
+包括 
+- before_agent：在Agent开始运行之前执行。 
+- before_model：在模型调用之前执行。 
+- fter_model：在模型调用之后执行。 
+- after_agent：在Agent流程全部完成后执行。
+关注**节点本身**，在执行前后修改数据，但**不能改变控制流**。
+它**不能控制流程**，只能：
+- 修改输入
+- 修改输出
+- 增加日志
+- 增加 Prompt
+- 删除消息
+- 更新状态
+##### Wrap-style hooks（包装风格钩子）
+顾名思义，它们在模型或工具调用前后运行。 适合控制流，如重试、回退、缓存。
+包括 
+- wrap_model_call (包裹模型调用) 
+- wrap_tool_call (包裹工具调用)
+关注**整个调用过程**，通过 `handler()` 包裹模型或工具调用，既能修改数据，也能**决定是否、何时以及调用多少次下一个节点**。因此，缓存、重试、降级、流式处理等需要控制执行流程的能力，都应使用 Wrap-style Hooks。
+
+#### 2.7.2Node-style hooks用法
+支持两种用法 
+- 装饰器是函数式挂载，把一个hook快速挂载到Agent的某个节点。 (底层用的类方法)
+
+	```
+	from langchain.agents.middleware import before_model, after_model, before_agent, after_agent, AgentMiddleware
+
+from typing import Any
+
+from langgraph.runtime import Runtime
+
+from langchain.agents import AgentState
+
+  
+  
+
+@before_model
+
+def before_model_middleware(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+    state["messages"][-1].content += "----> before_model <-----"
+
+    return None
+
+  
+
+@after_model
+
+def after_model_middleware(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+    state["messages"][-1].content += "----> after_model <-----"
+
+    return None
+
+  
+
+@before_agent
+
+def before_agent_middleware(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+    state["messages"][-1].content += "----> before_agent <-----"
+
+    return None
+
+  
+
+@after_agent
+
+def after_agent_middleware(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+    state["messages"][-1].content += "----> after_agent <-----"
+
+    return None
+    
+	```
+- 类写法是对象化中间件，把中间件封装为一个可配置、可复用、可扩展的组件。
+	 关键规则：
+		1. 必须继承AgentMiddleware
+		2. 方法名固定（before_model,after_model）
+		3. 类名随意
+```
+from langchain.agents.middleware import AgentMiddleware
+
+class MyMiddleware(AgentMiddleware):
+
+    def before_model(self,state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+        state["messages"][-1].content += "----> before_model <-----"
+
+        return None
+
+  
+
+    def after_model(self,state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+        state["messages"][-1].content += "----> after_model <-----"
+
+        return None
+
+  
+
+    def before_agent(self,state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+        state["messages"][-1].content += "----> before_agent <-----"
+
+        return None
+
+  
+
+    def after_agent(self,state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+
+        state["messages"][-1].content += "----> after_agent <-----"
+
+        return None
+```
+
+**参数说明**
+Node-style hooks函数有两个参数
+- state: 是一个AgentState实例，维护Agent运行过程中的状态，这类状态会随着Agent的运行而发生变 化，包括 消息列表。 
+- runtime: 是一个Runtime实例，维护Agent运行过程中的上下文环境，包括上下文、长期记忆等
+
+**返回值说明**
+返回 None：不修改状态（不修改Agent状态）
+```
+def before_model(self, state, runtime):
+ print("日志记录") 
+ return None  # 不做任何修改，继续流程
+```
+返回字典：更新状态
+```
+def before_model(self, state, runtime): 
+print("日志记录") return None  # 不做任何修改，继续流程
+```
+返回 {"jump_to": "..."}：控制流程
+```
+def before_model(self, state, runtime): 
+if state.get("count", 0) > 10: 
+	return {"jump_to": "__end__"}  # 跳过模型，直接结束 
+return None
+```
+
+**装饰器参数：can_jump_to**
+钩子函数可以 can_jump_to 。 改变Agent正常的运行轨迹 。比如：发现上下文窗口溢出，直接跳转至结尾，提前终止整 个Agent。
+can_jump_to 决定了钩子函数可以直接跳转至流程的哪些位置，可取值如下： 
+- end：跳转至Agent流程末尾，或第一个after_agent钩子，直接终止整个流程。
+- tools：跳转至工具节点。 
+- model：跳转至模型节点，或第一个before_model钩子。
+
+
+### 2.7.3 装饰器和类的选择
+装饰器写法更适合单个 hook、逻辑简单、快速原型的场景； 
+类写法更适合多个 hook 组合、复杂配置、需要同时提供同步/异步实现、以及更强复用与可测试 性的场景
+不如这么说：无脑用类写法
+
+### 2.7.4 hook函数执行顺序
+before_* 钩子函数：从前到后执行 
+after_* 钩子函数：从前往后执行，但是从后往前通知
+wrap_* 钩子函数：洋葱架构，前面的包裹后面的，先传递的包在最外层
+
+
+
+
+# 9.上下文记忆
+
+## 9.1 概述
+记忆是一种记住之前互动信息的系统。随着Agent处理涉及大量用户交互的复杂任务，记忆变得至关重要
