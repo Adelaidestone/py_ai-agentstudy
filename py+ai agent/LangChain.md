@@ -2047,3 +2047,44 @@ wrap_* 钩子函数：洋葱架构，前面的包裹后面的，先传递的包�
 大模型本身是“无状态”的， 不会记忆任何上下文的。即每次调用 agent.invoke() 都是全新 的开始，不记得之前的对话
 我们希望Agent拥有记忆：
 ![[我们希望我们的agent拥有记忆.png]]
+实现这个记忆功能，就需要 额外的模块去保存我们和模型对话的上下文信息，然后在下一次请求时， 把历史信息都输入给模型，让模型输出结果。 
+在 LangChain 中， 记忆(Memory) 就是专门负责“存储历史交互信息”的组件，核心作用是「保存上下文 提供上下文」，让LLM在每次响应时，都能“看到”之前的对话内容。 上下文工程(Context Engineering) 负责 “合理组织”这些记忆和任务信息 ，让LLM的响应更连贯、更贴 合需求。这也是Agent能实现复杂多轮交互的核心基础。
+
+在LangChain v1.x版本中，Agent是构建在LangGraph图结构之上的，通过上文提到的state和store构建记忆系统。使用更简单、功能更统一。
+- state：短期记忆对象，以 会话为单位组织，包含当前会话的所有消息记录以及自定义信息。 
+- store：长期记忆对象， 跨会话持久化的数据，通常需要结合向量数据库或外部存储实现。
+
+### 9.1.1 记忆分类
+
+记忆分为短期记忆和长期记忆，对应不同的使用场景：
+- 短期记忆（Short-term memory、会话级记忆、thread-scoped memory）：作用范围是单个 对话线程（Thread）内，一旦开启新对话（更换 thread_id ），记忆即消失。
+- 长期记忆（Long-term memory，跨会话级记忆 ）：在会话间存储用户特定或应用级数据， 并 在会话线程间共享。它可以随时在任何线程中被调用。记忆的范围是任意自定义命名空间，而不 仅仅是单一线程 ID。
+
+
+
+##  9.2 短期记忆
+LangChain1.x 的短期记忆是三者的组合：
+```
+State（会话内部状态） + Checkpointer（持久化机制） + Thread ID（会话作用域）
+```
+- State ：默认 存储历史消息列表messages ，通过State 管理历史消息 
+- Checkpointer ：负责将State 作为检查点持久化保存，检查点是某个时刻的State 快照 
+- Thread ID ：用于唯一标识State ，LangChain运行时会按照 thread_id 读写State快照
+	这就像玩 RPG 游戏时的“自动存档”：你不需要手动保存，系统在关键节点自动记录，下次进入游 戏随时可以从上次的存档点继续。
+
+**`checkpointer` 给 Agent 加了记忆，`thread_id` 决定记忆存在哪个"抽屉"里。同一个 `thread_id` 的多次调用共享一份对话历史。**
+
+### 9.2.1 关键步骤
+第1步：初始化记忆引擎：checkpointer = InMemorySaver()——创建一个内存级的记忆存储。 注意：InMemorySaver内存中保存，进程结束就丢失数据，适合测试。生产环境可换成数据库持 久化的 SqliteSaver、PostgresSaver 等 
+第2步：绑定 Agent：在 create_agent 时传入 checkpointer，让 Agent 具备状态存储能力。 
+第3步：设定会话 ID：通过 config = {"configurable": {"thread_id": "1"}} 为每次调用指定线程标识。 同一个 thread_id 共享记忆，不同 thread_id 完全隔离
+
+1. InMemorySaver()将状态持久化到内存，`进程结束或重建Saver()`则历史状态丢失
+2. 基于外部存储介质（如PostgreSQL）的持久化器，其存储的状态不会随进程终止而丢失，只要`不显式删除历史状态`，即可通过`thread_id`加载历史状态。
+
+### 常见问题：
+为什么 Agent 不记得？ 
+检查：
+- ✅ 是否添加了 checkpointer=InMemorySaver()？ 
+- ✅ 是否传入了 config 参数？ 
+- ✅ 两次调用的 thread_id 是否相同？
