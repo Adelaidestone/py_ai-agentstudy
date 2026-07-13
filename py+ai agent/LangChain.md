@@ -1733,3 +1733,62 @@ HumanInTheLoopMiddleware（人在环中间件、人工审核中间件）在工�
 1. True表示所有决策(approve, edit, reject) 都可以选择
 2. False表示不中断，即无需审批即可执行。
 3. InterruptOnConfig 是一个TypedDict的子类，可以用字典直接赋值。支持的Key有： ① allowed_decisions精细控制中断后允许的决策。 ② description：特定工具的中断描述信息，优先级高于description_prefix，后者会更改所有工具中断的描述。
+参数2：description_prefix —自定义中断描述 
+默认为 "Tool execution requires approval" 
+
+
+## 2.3 PIIMiddleware
+敏感信息保护。 
+PII中间件用于检测和处理对话中的个人身份信息（Personally Identifiable Information，PII），支持自定义处理策略。
+
+### 2.3.1 参数说明
+参数1：pii_type —检测的PII数据类型
+可以是内置类型或自定义类型，自定义类型有 
+- email ：电子邮箱地址 
+- credit_card ：信用卡号 
+- url ：网址 
+- mac_address ：设备MAC地址
+- ip ：IP地址
+参数2：strategy —处理PII信息的策略 
+支持四种选项： 
+- redact ：将检测到的PII信息用字符串 [REDACTED_[PII_TYPE]] 替换，其中的 PII_TYPE是上面提到的具体类型，比如 [REDACTED_EMAIL] 、 [REDACTED_CREDIT_CARD] 这样的标签。完全"擦除/隐藏” 真实内容。适合日志清洗、合规需求、公开输出时隐藏敏感内容。 
+- mask ：用 *** 将PII信息的前面一部分信息遮蔽。比如信用卡号可能变成 “   ** - ** - **  -1234 （只保留最后几位/部分可见），邮箱可能保留域名部分 + 隐藏用户名的一部分，既 隐藏大部分敏感信息，又保留了一点“可辨识性”（比如账号后四位、域名等），适合用户服务界面 / 前端显示 / 需要部分可识别但不泄露完整敏感内容的场景。 
+- hash ：用检测到的PII信息的哈希值替代原值。适合 analytics、调试 (debug)、统计分析、匿名追踪等场景。 
+- block ：如果检测到PII信息， 直接抛出异常。适合对隐私要求极高、绝不允许泄露任何敏感信息的场景
+参数3：detector —自定义 PII检测函数 或者  正则表达式
+如果没有提供则使用内置的检测函数。会使用langchain默认的检测函数：
+```
+BUILTIN_DETECTORS: dict[str, Detector] = { 
+email": detect_email, 
+"credit_card": detect_credit_card, 
+"ip": detect_ip, 
+"mac_address": detect_mac_address, 
+"url": detect_url, }
+```
+参数4：apply_to_input 是否在调用模型前检测
+默认为True
+参数5：apply_to_output 是否在模型调用后检测
+默认为False
+参数6：apply_to_tool_result 是否在模型调用后检测器输出
+默认为False
+通常我们只在模型调用前检测。因为PII检测的主要目的是避免将敏感信息发送给模型服务导致信息泄露。
+
+
+## 2.4 TodoListMiddleware
+TodoListMiddleware中间件赋予了Agent任务规划和追踪进度的能力，可以应对复杂的多步任务。 
+比如，当一个大任务需要被拆解为 3 个以上的子任务，且前面的步骤是后面步骤的前提时，如果不列 Todo 列表，大模型在执行到第 3 步时，很容易忘记自己最初的目标，或者在工具返回大量报错信息后 “应激”，直接跳过验证去回答用户。 
+此时，TodoListMiddleware 中间件强制它把计划挂在全局状态里，时刻提醒它“下一步该干什么”。
+```
+你的任务是否需要拆解？ 
+	├── 否 (比如：问答、翻译、单次函数调用) ──> ❌ 绝不需要，浪费算力 
+	└── 是 (比如：写一个包含多文件的工程) 
+		└── 步骤是否多变且需要应对失败？ 
+			├── 否 (步骤完全固定，如 A->B->C) ──> ❌ 传统的LangGraph线性节点即可 
+			└── 是 (AI 需要边做边调计划) ──> 引入 TodoListMiddleware
+```
+
+典型场景： 
+- 任务链路长、步骤多，且有严格的先后依赖关系 
+- 需要在前端 UI 界面实时展示 Agent 的“思考与执行进度”
+
+
