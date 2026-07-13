@@ -1588,3 +1588,148 @@ def create_agent(
 
 
 # 8. 中间件（Middleware）
+在 create_agent() 的底层运行机制中，有几个重要的组件，分别是： 
+- 模型(Model) ：Agent 的“大脑”，负责理解任务与决策推理。 
+- 工具(Tools) ：Agent 的“手脚”，执行模型自己做不到的外部操作。 
+- 系统提示词(System Prompt) ：Agent的“角色”，告诉模型该怎么想、参考什么上下文。 
+- 中间件(Middleware) ：Agent的“中枢”，在执行流程的关键节点进行拦截、控制和增强
+```
+from langchain.agents import create_agent 
+from langchain.agents.middleware import SummarizationMiddleware, HumanInTheLoopMiddleware 
+agent = create_agent( 
+	model="gpt-5.4-mini", 
+	tools=[...], 
+	middleware=[ 
+	SummarizationMiddleware(...), 
+	HumanInTheLoopMiddleware(...) 
+	], 
+)
+```
+
+## 1.概述
+Middleware（中间件），就是Agent执行过程中的钩子函数，是LangChain1.x的王牌工程化能力
+	钩子是框架或者系统在某个关键执行点暴露的拓展接口。开发者可以挂上自己的逻辑，在那些点修改、插入、替换行为，无需改变主流程代码，就像在流水线某个环节设置了“检查点”或“插入器”
+借助中间件，开发者可以高度定制和控制Agent运行的每一个环节，是处理Agent声明周期的标准方式
+
+**没有中间件的Agent架构**
+
+```mermaid
+flowchart TD
+
+A([用户请求 Request])
+B["🤖 Agent / 大模型"]
+C["🔧 Tool（工具）"]
+D([最终结果 Result])
+
+A --> B
+
+B -- 需要调用工具 --> C
+C -- Tool 返回 Observation --> B
+
+B -- 不再需要工具 --> D
+```
+
+**有Agent的架构**
+```mermaid
+flowchart TD
+
+A([用户请求])
+
+B["before_agent<br/>进入 Agent 前"]
+
+C["before_model<br/>模型调用前"]
+
+D["wrap_model_call<br/>包装模型调用"]
+
+E["after_model<br/>模型返回后"]
+
+F["wrap_tool_call<br/>包装工具调用"]
+
+G["after_agent<br/>Agent 完成"]
+
+H([最终结果])
+
+T["🔧 Tool"]
+
+A --> B
+B --> C
+
+C --> D
+D --> E
+
+E -- 继续调用工具 --> F
+F --> T
+T --> C
+
+E -- 已得到答案 --> G
+G --> H
+```
+在 LangChain 的 Agent 执行循环中，比如 “模型调用前”、“模型调用后”、“工具调用前后” 设置一些钩子 （hooks），让你在不改 Agent 主体逻辑的情况下实现策略与治理。
+
+### 为什么需要中间件
+如果没有中间件，Agent的执行流程会比较直接：
+```
+用户输入 → 拼接提示词/消息 → 调用模型 → 如有需要调用工具 → 返回结果
+```
+这种方式对于简单场景已经足够，但一旦进入真实项目，往往会遇到很多额外需求，例如： 
+- 想根据问题复杂度动态切换模型； 
+- 想限制某些用户只能调用部分工具； 
+- 想在工具报错时自动重试或返回兜底结果； 
+- 想在模型调用前插入额外的系统提示； 
+- 想记录每一步的执行日志，方便排查问题； 
+- 想在敏感信息出现时阻断执行； 
+- 想在正式执行工具前增加人工审批。
+这些需求有一个共同的特点：**他们不是Agent的核心业务逻辑，但是会影响Agent的执行过程**
+但是把在这些逻辑全部写到主流程，会带来几个问题：
+1. 主流程迅速变乱，变臃肿
+2. 很多逻辑是横切需求，难以复用
+3. 流程控制粒度不够细
+4. 后期维护成本高
+
+中间件的价值就在于把这些和业务无关，但是与执行过程强相关的横切逻辑，从Agent主流程中分离出来。让Agent主体代码聚焦业务，中间件用来实现“拦截流程、修改流程、增强流程”
+
+# 2.常用内置中间件
+## 2.1 SummarizationMiddleware
+作用：对历史消息列表作摘要&总结，达到压缩上下文效果
+原理 : 在达到触发条件时，调用大模型对历史消息进行摘要，有摘要的结果将会作为HumanMessage，放到消息列表最开始的位置
+
+
+
+### 
+2.1.1 参数说明 
+	注意：本节中间件的参数说明不保证包含完整参数列表，不常用或被标记为过时的参数被省略。 
+参数1：model —用于摘要的模型 
+可以是模型名称也可以是模型对象，如果传递的是模型名称，底层会调用 init_chat_model 初始化模 型。 
+参数2：trigger —摘要触发条件 
+是一个列表，每个元素对应一个条件，当 任一条件满足时，触发摘要。 
+1. tokens：token的数量，历史token的累计数量达到该值触发摘要。 
+2. messages：历史消息数量，历史消息条数达到该值触发摘要。 
+3. fraction：上下文长度比例。历史token的累计数量达到模型的max_input_tokens * fraction触发摘要 
+如果条件包含fraction，要求模型的profile包含max_input_tokens，Deepseek模型的profile为空， 此时需要手动添加该配置项。Deepseek-V3.2的上下文长度为128K。
+
+参数3：keep —摘要时保留的原始消息 支持三种条件，但和trigger不同，keep同一时间只接收一种条件。 
+1. tokens：摘要时保留的token数量。 2
+2.  messages：摘要时保留的历史消息条数。 
+3. fraction：摘要时保留max_input_tokens * fraction个token。 
+
+参数4：token_counter —统计token数量的函数 
+默认使用LangChain提供的count_tokens_approximately，一般不用更改。 
+对于纯文本消息，该函数的大致思路是先统计消息的字符数，也就是len(字符串)，然后再除以每 个token大致的字符数，转换为粗略的token数，再加一些额外开销。作为估算的token数。 
+参数5：summary_prompt —摘要时的自定义提示词 
+该提示词需要包含{messages}占位符，使得历史消息列表可以被插入。不指定则使用内置提示词。 
+参数6：trim_token_to_summarize —摘要时历史消息的最大token数 
+如果历史消息token数大于该值，则会被裁剪。默认为"4000"。 
+如果trigger用token作为度量，调大触发阈值时，当前配置项应相应调整，否则会丢失信息。
+
+## 2.2 HumanIntheLoopMiddleWare
+HumanInTheLoopMiddleware（人在环中间件、人工审核中间件）在工具调用前中断Agent运行待用户对工具调用请求决策。可选的决策有： 
+- approve（同意执行）  
+- edit（编辑调用配置后执行）
+- reject（拒绝执行） 
+
+### 2.2.1 参数说明
+参数1：interrupt_on —工具名和中断策略的映射 
+策略可以是True、False或InterruptOnConfig对象，精细控制决策选项。
+1. True表示所有决策(approve, edit, reject) 都可以选择
+2. False表示不中断，即无需审批即可执行。
+3. InterruptOnConfig 是一个TypedDict的子类，可以用字典直接赋值。支持的Key有： ① allowed_decisions精细控制中断后允许的决策。 ② description：特定工具的中断描述信息，优先级高于description_prefix，后者会更改所有工具中断的描述。
