@@ -2261,4 +2261,16 @@ def search(
 	refresh_ttl: bool | None = None, 
 	) -> list[SearchItem]:
 ```
-参数
+参数说明：
+- namespace_prefix：命名空间前缀，在该前缀下搜索
+- query：语义检索时用于查询的自然语言
+- filter：过滤条件，value中的键值对组合
+- limit：可以返回item的最大条数
+- offset：返回结果之前跳过的item数量
+- refresh_ttl：同上
+支持两种检索方式：
+- 按filter做结构化过滤：即用value中的键值筛选符合条件的记录
+- 按query做语义相似度检索，需要将输入转化为向量
+返回值：
+返回匹配的SearchItem列表，，并额外携带匹配分数等检索元信息
+
