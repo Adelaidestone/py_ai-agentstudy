@@ -2203,3 +2203,62 @@ value = { # 字典类型
 store.put(namespace, key, value)
 ```
 
+#### 基础API的试用
+Langchain 1.2 x的长期记忆基于store持久化数据，相关的API有：
+- put()：负责写入
+- get()：负责读取
+- search()：负责检索
+我们可以在Agent执行流程外直接访问长期记忆
+put()源码解析
+直接调用put()函数即可
+```
+def put( 
+self, 
+namespace: tuple[str, ...], 
+key: str, 
+value: dict[str, Any], 
+index: Literal[False] | list[str] | None = None, 
+*, 
+ttl: float | None | NotProvided = NOT_PROVIDED, 
+) -> None:
+```
+参数说明：
+- namespace：文档所在的层级路径
+- key：该路径下的唯一键
+- index：控制语义检索索引
+	- None（默认）：试用store初始化时配置的索引配置，如果初始化时没有指定索引策略，则index参数将会被忽略
+	- Flase：不为该item建立语义索引
+	- list[ str ]：只对指定字段路径建索引
+- ttl：可选，过期时间
+get（）源码解析
+按照 namespace+key精准查询，返回的不只是value，而是完整对象。即LangGraph底层将数据封装为Item对象
+函数签名
+```
+def get( 
+	self, 
+	namespace: tuple[str, ...], 
+	key: str, 
+	*, 
+	refresh_ttl: bool | None = None, 
+	) -> Item | None:
+```
+参数说明：
+- refresh_ttl：是否刷新当前item的tt
+	- 默认为None：表示采用创建store对象时指定的同名配置
+	- 如果没有配置TTL，该参数被忽略
+
+search（）：检索API
+```
+def search( 
+	self, 
+	namespace_prefix: tuple[str, ...], 
+	/, 
+	*, 
+	query: str | None = None, 
+	filter: dict[str, Any] | None = None, 
+	limit: int = 10, 
+	offset: int = 0, 
+	refresh_ttl: bool | None = None, 
+	) -> list[SearchItem]:
+```
+参数
