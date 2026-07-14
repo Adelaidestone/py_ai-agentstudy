@@ -2274,3 +2274,42 @@ def search(
 返回值：
 返回匹配的SearchItem列表，，并额外携带匹配分数等检索元信息
 
+
+
+
+
+
+---
+
+name: bailian-embedding-check-ctx-length报错
+
+description: 百炼/DashScope embedding 经 langchain OpenAIEmbeddings 调用必须关 check_embedding_ctx_length
+
+metadata:
+
+  node_type: memory
+
+  type: reference
+
+  originSessionId: cb57e5c2-ea90-48e0-866e-3b5999bae31f
+
+---
+
+  
+
+用 langchain 的 `OpenAIEmbeddings`（或 `init_embeddings(model=..., provider="openai", ...)`）调用阿里云**百炼 DashScope** 的文本嵌入模型时，必须设置 `check_embedding_ctx_length=False`，否则报 `400 InvalidParameter: contents is neither str nor list of str`。
+
+  
+
+**Why:** `OpenAIEmbeddings` 默认 `check_embedding_ctx_length=True`，会用 `tiktoken` 对输入分词/分块。百炼 `text-embedding-v3/v4` 不是 OpenAI 原生模型，tiktoken 对不上，预处理过程中把文本"数值化"成了非 str 结构发出去，百炼校验 `contents` 失败。这与 LangGraph store 的 `fields=["$"]` 无关（LangGraph 会 `json.dumps` 成 str，输入本身是合法的 `list[str]`）。
+
+  
+
+**How to apply:** 走 OpenAI 兼容端点（`base_url=https://dashscope.aliyuncs.com/compatible-mode/v1`）时：
+
+- 模型名用 `text-embedding-v3` / `text-embedding-v4`（**不是** `qwen3-*-embedding`，那是多模态 vl 模型，兼容模式不支持）
+
+- 默认输出维度 `1024`（不是 OpenAI 的 3072），index 的 `dims` 要写 1024
+
+- 必加 `check_embedding_ctx_length=False`
+
