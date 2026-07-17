@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LangChain.md",
+                "file": "ai agent/大模型认知和工程概览.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "LangChain"
+              "title": "大模型认知和工程概览"
             }
           }
         ]
@@ -186,6 +186,12 @@
   },
   "active": "d5d01a1772ed5b7b",
   "lastOpenFiles": [
+    "ai agent/Atguigu客服知识库RAG模块化剖析-v2.md",
+    "ai agent/Atguigu客服知识库RAG深度剖析.md",
+    "ai agent/NumPy基础.md",
+    "ai agent/Atguigu客服知识库RAG深度剖析.md.tmp.30856.4f6237467b6c",
+    "ai agent/大模型认知和工程概览.md",
+    "LangChain.md",
     "RAG工作流程.png",
     "RAG流程.png",
     "长期记忆vs短期记忆.png",
@@ -197,11 +203,7 @@
     "用参数调用tools.png",
     "Agent的架构.png",
     "未命名 1.base",
-    "LangChain.md",
     "LangChain智能体生命周期.png",
-    "LangChain、LangGraph、DeepAgent关系.png",
-    "ai agent/大模型认知和工程概览.md",
-    "ai agent/NumPy基础.md",
     "函数.md",
     "面向对象.md",
     "未命名.base",
@@ -219,7 +221,6 @@
     "ai agent/shizhan",
     "ai agent",
     "python/面向对象/类属性.py",
-    "python/面向对象/类的定义.py",
-    "python/类属性.py"
+    "python/面向对象/类的定义.py"
   ]
 }
