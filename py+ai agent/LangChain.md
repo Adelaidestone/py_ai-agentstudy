@@ -82,7 +82,7 @@ LangChain为开发者提供了调用模型、工具和中间件集成、智能�
 ### 1.4.3  DeepAgent(智能体的执行框架)
 DeepAgent是新推出的全新组件，被定位为Agent Harness（智能体执行框架）。他构建在LangChain和LangGraph之上，增加了规划能力、文件系统、子Agent等高级功能。让开发者无须从0构建复杂的控制逻辑，即可创建具备深度规划、长期记忆和多专家协作能力的智能体。
 核心能力：显式规划、虚拟文件系统、子智能体、长期记忆、可拓展中间件
-![[LangChain、LangGraph、DeepAgent关系.png]]
+![[LangChain生态关系.png]]
 用LangChain快速搭建，用LangGraph打磨生产稳定性，用Deep Agent赋予Agent更强的自主能力能力--这才是完整的LangChain玩法
 ### 1.4.4 LangSmith(可视化监控和测试平台)
 当智能体系统逐渐复杂时，单靠日志和打印输出调试无法满足调试和质量管理的需求
@@ -240,7 +240,7 @@ LangChain1.1及更高版本可以通过profile属性查看模型的配置信息�
 ### 2.5.3 两个重要的参数
 **model_kwargs**
 用于存放那些传递 **OpenAI 官方 API 支持但 LangChain 尚未单独封装** 的标准参数，这些参数会直接合并到请求顶层，如用于支持Function Call的tools字段
-![[openai的tools.png]]
+![[OpenAI工具参数.png]]
 ```
 from langchain.chat_models import init_chat_model
 
@@ -321,7 +321,7 @@ rprint(response)
 ```
 
 
-![[用参数调用tools.png]]
+![[工具调用示例.png]]
 
 **extra_body**
 用来存放模型厂商（vLLM、LM Studio、OpenRouter等） OpenAI 兼容服务的私有扩展参数，这些会放到 `extra_body` 中，而不是请求顶层。
@@ -498,7 +498,7 @@ print(msg2)
 借助 content_blocks 我们可以用一套标准代码，无缝地在不同厂商的模型之间切换。
 ② 输出格式化 
 content_blocks还可用于输出格式化，以deepseek官网的deepseek-v4-flash为例，其输出包含思考 内容，后者位于additional_kwargs的reasoning_content字段下。
-![[content_blocks输出格式化.png]]
+![[content_blocks输出.png]]
 不同的模型其输出格式可能不同，仅为提取思考内容，切换模型都可能需要更改代码，非常不方便。 content_blocks提供了统一的输出格式，可以将不同格式的响应统一为标准格式。 注意：content_blocks是懒加载的，即调用时才会解析。
 	说明：优先检查 response.content_blocks 而不是 response.content，特别是当你需要获取“思维 链”或者“引用（Citations）”信息时。
 
@@ -560,13 +560,13 @@ list prompt_template = ChatPromptTemplate([
 #### 4.6.2模板如何调用
 方式1：使用 invoke()
 输出：ChatPromptValue的list对象
-![[invoke()的输出是ChatPromptValue.png]]
+![[invoke输出类型.png]]
 方式2：使用format()
 输出：字符串（str）
-![[format()的输出是str.png]]
+![[format输出类型.png]]
 方式3：使用format_messages()
 输出：消息列表
-![[format_message的输出.png]]
+![[format_message输出.png]]
 
 **丰富的输入参数类型**
 
@@ -637,7 +637,7 @@ LangChain 的 Chain 只会自动传入**运行时上下文变量**，全局固�
 # 5. Tools
 ## 5.1 概述
 工具是赋予大模型语言与外部世界交互能力的关键组件，从而能够让智能体哦执行搜索、计算、数据库查询、邮件发送或调用第三方API等，进而构建功能强大的ai应用。借助工具，大模型才能从认识世界走向改变世界
-![[工具是构建智能体的核心要素之一.png]]
+![[工具核心地位.png]]
 
 ## 5.2 工具调用的整体流程
 经典流程如下
@@ -747,7 +747,7 @@ final_response = model_with_tools.invoke(messages)
 print(f"final_response: \n{final_response}")
 ```
 
-![[大模型调用工具过程.png]]
+![[工具调用流程.png]]
 
 ## 5.4 `convert_to_openai_tool`
 位于 `langchain_core.utils.function_calling`，是 LangChain 底层核心工具转换函数，专门把各类工具对象转换成 **OpenAI 官方 Tool Call 标准 JSON Schema**
@@ -908,7 +908,7 @@ weather_schema = {    
 ### tool_choice参数说明
 
 `bind_tools` 可以传递参数 `tool_choice `，用于控制是否强制使用工具。 该字段最终会作为 `payload` 的 `tool_choice` 字段传递给模型，OpenAI和Deepseek的官方API服务对于 `tool_choice `的取值做了相同的规定。
-![[deepseek中关于tool_choice的解释.png]]
+![[tool_choice参数.png]]
 none ：模型不会调用任何工具。 
 auto ： 默认值，模型可以自主决定不调用或调用任意数量的工具。 
 required ：模型必须调用工具，数量不限。
@@ -1122,7 +1122,7 @@ Annootated[类型，附加信息1，附加信息2...]
 
 # 7.智能体
 通用人工智能（AGI）是普遍认知中的AI的终极形态。而智能体（Agent）是当前AI工程应用的“终极形态“，即Agent是大模型应用开发的核心
-![[Agent是大模型应用开发的核心.png]]
+![[Agent核心地位.png]]
 在大模型应用开发中，智能体通常指一种以 大语言模型为推理与决策核心，结合 环境交互能力，能够进行 规划决策并执行 复杂任务以达成目标的软件系统。
 
 Agent的关键能力 
@@ -1133,7 +1133,7 @@ Agent的关键能力
 - 如何利用好 工具结果生成回答&推进任务
 
 Agent的核心组件
-![[Agent的架构.png]]
+![[Agent架构.png]]
 一句话总结：
 - 必须的：行动（Action）
 - 几乎总是存在的：工具（Tools）
@@ -1236,7 +1236,7 @@ graph TD
 ```
 LangChain内置工具列表： [Tool integrations - Docs by LangChain](https://docs.langchain.com/oss/python/integrations/tools)
 具有代表性工具：
-![[langchain内置工具.png]]
+![[LangChain内置工具.png]]
 
 当用户提出一个复杂需求时，Agent会像人类一样，先理解任务、规划步骤、使用合适的工具（如搜索 网络、查询数据库、执行计算）获取信息，Agent 会在一个循环中 反复调用模型和工具，直到某次模 型输出中 不再包含工具调用则结束，最后综合所有信息给出最终答案。
 ```
@@ -2046,7 +2046,7 @@ wrap_* 钩子函数：洋葱架构，前面的包裹后面的，先传递的包�
 记忆是一种记住之前互动信息的系统。随着Agent处理涉及大量用户交互的复杂任务，记忆变得至关重要
 大模型本身是“无状态”的， 不会记忆任何上下文的。即每次调用 agent.invoke() 都是全新 的开始，不记得之前的对话
 我们希望Agent拥有记忆：
-![[我们希望我们的agent拥有记忆.png]]
+![[Agent记忆机制.png]]
 实现这个记忆功能，就需要 额外的模块去保存我们和模型对话的上下文信息，然后在下一次请求时， 把历史信息都输入给模型，让模型输出结果。 
 在 LangChain 中， 记忆(Memory) 就是专门负责“存储历史交互信息”的组件，核心作用是「保存上下文 提供上下文」，让LLM在每次响应时，都能“看到”之前的对话内容。 上下文工程(Context Engineering) 负责 “合理组织”这些记忆和任务信息 ，让LLM的响应更连贯、更贴 合需求。这也是Agent能实现复杂多轮交互的核心基础。
 
@@ -2144,7 +2144,7 @@ State（会话内部状态） + Checkpointer（持久化机制） + Thread ID（
 ### 9.3.1概念
 短期记忆记录的是 会话级别（线程，Thread） 的数据，会话间不共享。 
 而长期记忆记录的是用户特定或应用级别的数据，任何会话都可以随时访问。
-![[长期记忆vs短期记忆.png]]
+![[长短期记忆对比.png]]
 比如： 
 你喜欢简短回答 
 你偏好 Python 

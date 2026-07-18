@@ -8,15 +8,15 @@
         "type": "tabs",
         "children": [
           {
-            "id": "d5d01a1772ed5b7b",
+            "id": "2615119aaf7a986d",
             "type": "leaf",
             "state": {
               "type": "image",
               "state": {
-                "file": "1-3-5-1-1.jpg"
+                "file": "photo/未归档/注意力机制公式.png"
               },
               "icon": "lucide-image",
-              "title": "1-3-5-1-1"
+              "title": "注意力机制公式"
             }
           }
         ]
@@ -76,7 +76,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 352.5
   },
   "right": {
     "id": "976aa9499150a794",
@@ -182,43 +182,43 @@
       "markdown-importer:打开 Markdown 格式转换器": false
     }
   },
-  "active": "dcd3f904c17511c7",
+  "active": "2615119aaf7a986d",
   "lastOpenFiles": [
-    "未命名.base",
-    "未命名 1.base",
-    "长期记忆vs短期记忆.png",
-    "transformer-QKV.png",
-    "rag和微调.png",
-    "Agent的架构.png",
-    "Agent是大模型应用开发的核心.png",
-    "我们希望我们的agent拥有记忆.png",
-    "ai启示录.md",
-    "deepseek中关于tool_choice的解释.png",
-    "content_blocks输出格式化.png",
-    "ai agent/Atguigu客服知识库RAG深度剖析.md",
-    "ai agent/Atguigu客服知识库RAG模块化剖析-v2.md",
     "ai agent/大模型认知和工程概览.md",
+    "photo/未归档/注意力机制公式.png",
+    "photo/未归档/RAG与微调对比.png",
+    "photo/未归档/举例.png",
+    "ai agent/Atguigu客服知识库RAG模块化剖析-v2.md",
+    "_migrate.py.tmp.3208.f75e6755ad11",
+    "_migrate.py.tmp.3208.0933ed04f5ec",
+    "photo/ai agent/大模型认知和工程概览/模型训练过程.png",
+    "photo/LangChain/钩子函数.png",
+    "photo/LangChain/模型调用流程.png",
+    "photo/LangChain/RAG流程.png",
+    "photo/LangChain/RAG工作流程.png",
+    "photo/LangChain/LangChain智能体生命周期.png",
+    "photo/未归档/Transformer的QKV机制.png",
+    "_report.json",
+    "photo/未归档",
+    "photo/提示词工程",
+    "photo/函数",
+    "photo/ai agent/大模型认知和工程概览",
+    "photo/ai agent",
+    "photo/RAG",
+    "photo/Python_数据类型",
+    "ai启示录.md",
+    "ai agent/Atguigu客服知识库RAG深度剖析.md",
     "ai agent/NumPy基础.md",
-    "ai agent/Atguigu客服知识库RAG深度剖析.md.tmp.30856.4f6237467b6c",
     "LangChain.md",
-    "RAG工作流程.png",
-    "RAG流程.png",
     "函数.md",
     "面向对象.md",
     "提示词工程.md",
     "流程控制语句.md",
-    "目录.base",
     "2026-07-11.md",
     "Python_数据类型.md",
     "RAG.md",
-    "photo",
     "Python 算数运算符.md",
     "python_day1.md",
-    "preamble.sty.md",
-    "未命名 1",
-    "ai agent/shizhan",
-    "ai agent",
-    "python/面向对象/类属性.py",
-    "python/面向对象/类的定义.py"
+    "preamble.sty.md"
   ]
 }
